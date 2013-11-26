@@ -1,7 +1,0 @@
-x=seq(from=0,to=1,by=0.01)
-c=3*x*log10(x)-(1/30)*exp(1)**-((30*x-30/exp(1))**4)
-d=2.5*x*log10(x)-(1/36)*exp(1)**-((36*x-36/exp(1))**4)
-e=2*x*log10(x)-(1/50)*exp(1)**-((50*x-50/exp(1))**4)
-plot(e,x,type="lines", col = "red", xlim=c(-1, 0) , ylim=c(0, 1))
-lines(d,x, col = "red")
-lines(c,x, col = "red")
