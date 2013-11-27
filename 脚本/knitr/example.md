@@ -13,7 +13,7 @@ print(c, type = "html")
 ```
 
 <!-- html table generated in R 3.0.2 by xtable 1.7-1 package -->
-<!-- Tue Oct 29 18:31:55 2013 -->
+<!-- Wed Nov 27 17:28:23 2013 -->
 <TABLE border=1>
 <TR> <TH>  </TH> <TH>     speed </TH> <TH>      dist </TH>  </TR>
   <TR> <TD align="right"> 1 </TD> <TD> Min.   : 4.0   </TD> <TD> Min.   :  2   </TD> </TR>
@@ -38,3 +38,11 @@ plot(cars)
 $$
 \mu = \beta_0 + {\beta_1}^2
 $$
+
+
+```r
+plot(sin(seq(0, 6.2831, length = 60)), type = "b")
+```
+
+![plot of chunk 360度sin图](figure/360度sin图.png) 
+
