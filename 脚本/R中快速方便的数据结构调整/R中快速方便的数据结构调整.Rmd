@@ -1,0 +1,60 @@
+R中快速方便的数据结构调整
+========================================================
+
+R中需要将数据整合成长列表的形式才能进行很多统计分析，但是数据来自各种检测仪器或
+Excel以及为了方便书写记录，往往都以直观简单的横列表或纵列表形式存在。为了除去在
+Excel等其他工具中手动调整数据结构的麻烦，R其实提供了非常强大的工具和方法，本文以
+简单例子来说明。
+
+## 生成例子横列表
+```{r}
+set.seed(1984)
+a <- runif(10,min=1,max=1.5)
+b <- rbinom(10,size=1,prob=0.5)
+c <- rnorm(10,mean=1,sd=0.5)
+data <- rbind(a,b,c)
+```
+
+```{r echo=FALSE,results='asis'}
+library(xtable)
+print(xtable(data),type="html")
+```
+
+## 转置成纵列表
+```{r}
+data_t <- t(data)
+```
+
+```{r echo=FALSE,results='asis'}
+print(xtable(data_t),type="html")
+```
+
+## 如果首列为变量名可以用类似下列命令来转置后再重命名
+```{r}
+data_t <- t(data[,2:10])
+names(data_t) <- c("a","b","c")
+```
+
+```{r echo=FALSE,results='asis'}
+print(xtable(data_t),type="html")
+```
+
+## *融合成真正需要的长列表形式*
+```{r}
+library(reshape2)
+data_t <- melt(data_t,value.name="OD等")
+names(data_t)[2] <- "Protein等"
+```
+
+```{r echo=FALSE,results='asis'}
+print(xtable(data_t),type="html")
+```
+
+## 后续操作等，如……
+```{r}
+data <- data_t[,2:3]
+```
+
+```{r echo=FALSE,results='asis'}
+print(xtable(data),type="html")
+```
