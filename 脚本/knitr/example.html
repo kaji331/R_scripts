@@ -188,14 +188,60 @@ hljs.initHighlightingOnLoad();
 
 <p>When you click the <strong>Knit HTML</strong> button a web page will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:</p>
 
-<pre><code class="r">library(xtable)
-c &lt;- xtable(summary(cars))
-print(c, type = &quot;html&quot;)
+<pre><code class="r">c &lt;- summary(cars)
+kable(c)  #使用knitr自带的kable在Rmd用RStudio输出html时与xtable没有区别；在ReText中kable
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left">id</th>
+<th align="left">speed</th>
+<th align="left">dist</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left"></td>
+<td align="left">Min.   : 4.0</td>
+<td align="left">Min.   :  2</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">1st Qu.:12.0</td>
+<td align="left">1st Qu.: 26</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">Median :15.0</td>
+<td align="left">Median : 36</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">Mean   :15.4</td>
+<td align="left">Mean   : 43</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">3rd Qu.:19.0</td>
+<td align="left">3rd Qu.: 56</td>
+</tr>
+<tr>
+<td align="left"></td>
+<td align="left">Max.   :25.0</td>
+<td align="left">Max.   :120</td>
+</tr>
+</tbody></table>
+
+<pre><code class="r"># 表保持与html一致但xtable为更漂亮的html代码；kable和xtable用ReText都能
+# 正常导出且与ReText预览结果一致；kable表格能被pandoc正常转变为pdf的三线
+# 表，xtable转变后格式不对；xtable在lyx中为三线表，kable则只是类似Excel
+# 的网格线表而已。
+library(xtable)
+print(xtable(c), type = &quot;html&quot;)
 </code></pre>
 
 <!-- html table generated in R 3.0.2 by xtable 1.7-1 package -->
 
-<!-- Wed Nov 27 17:28:23 2013 -->
+<!-- Fri Dec  6 17:12:07 2013 -->
 
 <TABLE border=1>
 <TR> <TH>  </TH> <TH>     speed </TH> <TH>      dist </TH>  </TR>

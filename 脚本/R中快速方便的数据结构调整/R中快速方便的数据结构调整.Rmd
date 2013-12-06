@@ -56,5 +56,6 @@ data <- data_t[,2:3]
 ```
 
 ```{r echo=FALSE,results='asis'}
-print(xtable(data),type="html")
+#print(xtable(data),type="html")
+kable(data) #knitr自带函数，可以使md转pdf不出错，不需xtable，但lyx中不是三线表
 ```
