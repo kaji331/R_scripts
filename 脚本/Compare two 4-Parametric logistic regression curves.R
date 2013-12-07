@@ -11,6 +11,7 @@ anova(S.alba.m1,S.alba.m2) #比较归一化后与原始回归是否无显著差�
                            #两条非线性回归曲线是否有差异的方法
 SI(S.alba.m2,c(50,50)) #比较归一化后两个曲线ED50差距
 SI(S.alba.m2,c(50,50),reverse=TRUE) #倒数结果
-plot(S.alba.m2,broken=TRUE,legend="") #legend有问题，会中断脚本执行，但是仍然可以去除自动图例
-plot(S.alba.m1,broken=TRUE,col="red",lty=c(3,4),add=TRUE,legend="")
+plot(S.alba.m2,broken=TRUE)
+plot(S.alba.m2,broken=TRUE,legend=FALSE) #去除自动图例
+plot(S.alba.m1,broken=TRUE,col="red",lty=c(3,4),add=TRUE,legend=F)
 relpot(S.alba.m2, interval = "delta") #相对功效
