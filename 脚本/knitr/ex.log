@@ -1,21 +1,9 @@
-This is XeTeX, Version 3.1415926-2.4-0.9998 (TeX Live 2012/TeX Live for SUSE Linux) (format=xelatex 2013.4.3)  24 OCT 2013 11:57
+This is XeTeX, Version 3.1415926-2.5-0.9999.3 (TeX Live 2013/TeX Live for SUSE Linux) (format=xelatex 2013.11.22)  31 DEC 2013 22:09
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**ex.tex
-(./ex.tex
-LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, ge
-rman-x-2011-07-01, ngerman-x-2011-07-01, afrikaans, ancientgreek, ibycus, arabi
-c, armenian, bulgarian, pinyin, coptic, croatian, danish, ukenglish, usenglishm
-ax, esperanto, estonian, ethiopic, farsi, finnish, friulan, german, ngerman, sw
-issgerman, monogreek, greek, hungarian, icelandic, assamese, bengali, gujarati,
- hindi, kannada, malayalam, marathi, oriya, panjabi, tamil, telugu, indonesian,
- interlingua, irish, kurmanji, lao, latin, latvian, lithuanian, mongolian, mong
-olianlmc, bokmal, nynorsk, romanian, romansh, russian, sanskrit, serbian, serbi
-anc, slovenian, swedish, turkish, turkmen, ukrainian, uppersorbian, welsh, load
-ed.
-(/usr/share/texmf/tex/latex/base/article.cls
+**\nonstopmode \input ./ex.tex
+(./ex.tex (/usr/share/texmf/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
 (/usr/share/texmf/tex/latex/base/size10.clo
 File: size10.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
@@ -51,7 +39,7 @@ File: graphics.cfg 2010/04/23 v1.9 graphics configuration of TeX Live
 Package graphics Info: Driver file: xetex.def on input line 91.
 
 (/usr/share/texmf/tex/xelatex/xetex-def/xetex.def
-File: xetex.def 2009/11/22 v0.94 LaTeX color/graphics driver for XeTeX (RRM/JK)
+File: xetex.def 2013/04/29 v0.96 LaTeX color/graphics driver for XeTeX (RRM/JK)
 
 ))
 \Gin@req@height=\dimen103
@@ -66,7 +54,8 @@ File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
 Package color Info: Driver file: xetex.def on input line 130.
 )
 (/usr/share/texmf/tex/latex/framed/framed.sty
-Package: framed 2007/10/04 v 0.95: framed or shaded text with page breaks
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip43
 \fb@frw=\dimen105
 \fb@frh=\dimen106
 \FrameRule=\dimen107
@@ -110,12 +99,12 @@ Overfull \hbox (15.0pt too wide) in paragraph at lines 82--83
 
 ] (./ex.aux) ) 
 Here is how much of TeX's memory you used:
- 667 strings out of 494312
- 7985 string characters out of 3163029
- 57477 words of memory out of 3500000
- 3960 multiletter control sequences out of 15000+200000
- 3808 words of font info for 15 fonts, out of 3000000 for 9000
- 920 hyphenation exceptions out of 8191
- 25i,8n,19p,245b,223s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 688 strings out of 493938
+ 8208 string characters out of 6155881
+ 61585 words of memory out of 5000000
+ 4040 multiletter control sequences out of 15000+600000
+ 3808 words of font info for 15 fonts, out of 8000000 for 9000
+ 1144 hyphenation exceptions out of 8191
+ 25i,8n,19p,267b,225s stack positions out of 5000i,500n,10000p,200000b,80000s
 
 Output written on ex.pdf (1 page).
