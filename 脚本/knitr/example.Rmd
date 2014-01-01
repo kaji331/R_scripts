@@ -26,6 +26,6 @@ $$
 \mu = \beta_0 + {\beta_1}^2
 $$
 
-```{r 360度sin图,fig.width=7,fig.height=6}
+```{r 360度sin图,fig.width=7,fig.height=6,echo=FALSE}
 plot(sin(seq(0,6.2831,length=60)),type="b")
 ```
