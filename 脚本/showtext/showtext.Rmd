@@ -1,0 +1,16 @@
+showtext package
+========================================================
+
+example of showtext package
+
+```{r}
+library(showtext)
+font.add("hkshaonv","华康少女体 .ttf")
+
+dev.set()
+showtext.begin()
+a <- seq(0,10,length.out=1000)
+plot(sin(a),type="l",main="正弦函数",family="hkshaonv")
+showtext.end()
+dev.off()
+```
