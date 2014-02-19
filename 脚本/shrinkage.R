@@ -2,7 +2,7 @@ shrinkage <- function(fit,k=10) {
 	require(bootstrap)
 
 	theta.fit <- function(x,y){lsfit(x,y)}
-	theta.predict <- function(fit.x){cbind(1,x)%*%fit$coef}
+	theta.predict <- function(fit,x){cbind(1,x)%*%fit$coef}
 
 	x <- fit$model[,2:ncol(fit$model)]
 	y <- fit$model[,1]
