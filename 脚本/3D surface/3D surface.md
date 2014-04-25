@@ -14,11 +14,14 @@ sc <- function(x, y) {
 }
 z <- outer(x, y, sc)
 
-color <- colorRampPalette(c("blue", "green"))(100)
-zfacet <- z[-4, -4] + z[-4, -ncol(z)] + z[-nrow(z), -4] + z[-nrow(z), -ncol(z)]
-facetcol <- cut(zfacet, 100)
+gradualColor <- function(z, col1 = "blue", col2 = "green", n = 100) {
+    color <- colorRampPalette(c(col1, col2))(n)
+    zfacet <- z[-1, -1] + z[-1, -ncol(z)] + z[-nrow(z), -1] + z[-nrow(z), -ncol(z)]
+    facetcol <- cut(zfacet, 100)
+    return(color[facetcol])
+}
 
-persp(x, y, z, phi = 45, theta = -30, col = color[facetcol])
+persp(x, y, z, phi = 45, theta = -30, col = gradualColor(z, col1 = "red"))
 ```
 
 ![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1.png) 
