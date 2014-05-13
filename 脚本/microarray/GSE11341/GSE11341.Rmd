@@ -11,7 +11,7 @@ gse <- ReadAffy()
 gse_sample <- read.csv("../Samples.csv")
 sampleNames(gse) <- sub("\\.CEL$","",sampleNames(gse))
 mt <- match(gse_sample$SampleID,sampleNames(gse))
-vmd <- data.frame(labelDescription=c("Sample ID","Tissue type","Oxygen status","Repeat Times"))
+vmd <- data.frame(labelDescription=c("Sample ID","Tissue type","Oxygen status","Repeat times"))
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
 
@@ -59,12 +59,12 @@ colnames(design) <- levels(levels)
 corfit <- duplicateCorrelation(gse_eset,design,block=gse_sample$Repeat)
 fit <- lmFit(gse_eset,design,block=gse_sample$Repeat,correlation=corfit$consensus.correlation)
 cm <- makeContrasts(
-  Cardiac3=Cardiac.cells_3hrHypoxi-Cardiac.cells_Normoxi,
-  Cardiac24=Cardiac.cells_24hrHypoxi-Cardiac.cells_Normoxi,
-  Cardiac48=Cardiac.cells_48hrHypoxi-Cardiac.cells_Normoxi,
-  Lung3=Lung.cells_3hrHypoxi-Lung.cells_Normoxi,
-  Lung24=Lung.cells_24hrHypoxi-Lung.cells_Normoxi,
-  Lung48=Lung.cells_48hrHypoxi-Lung.cells_Normoxi,
+  Cardiac3=Cardiac.cells_3hrHypoxia-Cardiac.cells_Normoxia,
+  Cardiac24=Cardiac.cells_24hrHypoxia-Cardiac.cells_Normoxia,
+  Cardiac48=Cardiac.cells_48hrHypoxia-Cardiac.cells_Normoxia,
+  Lung3=Lung.cells_3hrHypoxia-Lung.cells_Normoxia,
+  Lung24=Lung.cells_24hrHypoxia-Lung.cells_Normoxia,
+  Lung48=Lung.cells_48hrHypoxia-Lung.cells_Normoxia,
   levels=design)
 fit2 <- contrasts.fit(fit,cm)
 fit2 <- eBayes(fit2)
