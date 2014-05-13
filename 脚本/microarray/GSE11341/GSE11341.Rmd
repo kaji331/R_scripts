@@ -82,3 +82,31 @@ selected <- gse_eset[rownames(dif),]
 rownames(selected) <- dif$symbols
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
 ```
+
+统计分析及可视化
+
+```{r echo=FALSE}
+library(GOstats)
+entrezUniverse <- unique(unlist(mget(rownames(gse_eset),hgu133aENTREZID)))
+entrezSelected <- unique(dif[!is.na(dif$EntrezID),"EntrezID"])
+params <- new("GOHyperGParams",geneIds=entrezSelected,universeGeneIds=entrezUniverse,annotation=gse_annotation,ontology="BP",pvalueCutoff=0.001,conditional=F,testDirection="over")
+hgOver <- hyperGTest(params)
+bp <- summary(hgOver)
+htmlReport(hgOver,file="../ALL_go.html")
+library(Rgraphviz)
+ghandle <- goDag(hgOver)
+subGHandle <- subGraph(snodes=as.character(summary(hgOver)[,1]),graph=ghandle)
+plot(subGHandle)
+
+library(GeneAnswers)
+humanGeneInput <- dif[,c("EntrezID","F","adj.P.Val")]
+humanExpr <- gse_eset[match(rownames(dif),rownames(gse_eset)),]
+humanExpr <- cbind(humanGeneInput[,"EntrezID"],humanExpr)
+humanGeneInput <- humanGeneInput[!is.na(humanGeneInput[,1]),]
+humanExpr <- humanExpr[!is.na(humanExpr[,1]),]
+y <- geneAnswersBuilder(humanGeneInput,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.1,geneExpressionProfile=humanExpr,verbose=F)
+yy <- geneAnswersReadable(y,verbose=F)
+geneAnswersConceptNet(yy,colorValueColumn="F",centroidSize="pvalue",output="interactive")
+yyy <- geneAnswersSort(yy,sortBy="pvalue")
+geneAnswersHeatmap(yyy)
+```
