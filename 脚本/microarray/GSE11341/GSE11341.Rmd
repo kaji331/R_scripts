@@ -1,0 +1,84 @@
+GSE11341
+========================================================
+
+##按照丰核要求做报告##
+
+载入数据
+```{r echo=FALSE}
+setwd("~/Projects/microarray_data/GSE11341/CELs")
+library(affy)
+gse <- ReadAffy()
+gse_sample <- read.csv("../Samples.csv")
+sampleNames(gse) <- sub("\\.CEL$","",sampleNames(gse))
+mt <- match(gse_sample$SampleID,sampleNames(gse))
+vmd <- data.frame(labelDescription=c("Sample ID","Tissue type","Oxygen status","Repeat Times"))
+phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
+sampleNames(gse) <- sampleNames(gse@protocolData)
+
+library(annotate)
+gse_annotation <- annPkgName(gse@annotation,type="db")
+#biocLite(gse_annotation)
+library(gse_annotation,character.only=T)
+```
+
+质量检验
+
+```{r echo=FALSE}
+library(simpleaffy)
+gse_qc <- qc(gse)
+plot(gse_qc)
+
+library(affyPLM)
+gse_PLM <- fitPLM(gse)
+par(mar=c(6,3,2,2))
+boxplot(gse_PLM,main="NUSE",col=rainbow(23),las=3,ylim=c(0.95,1.1),whisklty=0)
+Mbox(gse_PLM,main="RLE",col=rainbow(23),las=3,ylim=c(-0.4,0.4),whisklty=0)
+
+gse_deg <- AffyRNAdeg(gse)
+par(mar=c(5,3,3,0))
+plotAffyRNAdeg(gse_deg,col=rainbow(23))
+legend("topleft",rownames(pData(gse)),col=rainbow(23),lwd=1,ncol=4,inset=0.05,cex=0.5)
+```
+
+均一化
+
+```{r echo=FALSE}
+gse_rma <- rma(gse)
+par(mar=c(6,3,2,2))
+boxplot(gse_rma,col=rainbow(23),las=3,main="RMA")
+```
+
+选取差异表达基因
+
+```{r echo=FALSE}
+library(limma)
+gse_eset <- exprs(gse_rma)
+levels <- factor(paste(gse_sample$Tissue,gse_sample$Oxygen,sep="."))
+design <- model.matrix(~0+levels)
+colnames(design) <- levels(levels)
+corfit <- duplicateCorrelation(gse_eset,design,block=gse_sample$Repeat)
+fit <- lmFit(gse_eset,design,block=gse_sample$Repeat,correlation=corfit$consensus.correlation)
+cm <- makeContrasts(
+  Cardiac3=Cardiac.cells_3hrHypoxi-Cardiac.cells_Normoxi,
+  Cardiac24=Cardiac.cells_24hrHypoxi-Cardiac.cells_Normoxi,
+  Cardiac48=Cardiac.cells_48hrHypoxi-Cardiac.cells_Normoxi,
+  Lung3=Lung.cells_3hrHypoxi-Lung.cells_Normoxi,
+  Lung24=Lung.cells_24hrHypoxi-Lung.cells_Normoxi,
+  Lung48=Lung.cells_48hrHypoxi-Lung.cells_Normoxi,
+  levels=design)
+fit2 <- contrasts.fit(fit,cm)
+fit2 <- eBayes(fit2)
+dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"))
+
+dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
+dif$EntrezID <- getEG(rownames(dif),gse_annotation)
+```
+
+热图
+
+```{r echo=FALSE,}
+library(pheatmap)
+selected <- gse_eset[rownames(dif),]
+rownames(selected) <- dif$symbols
+pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
+```
