@@ -15,6 +15,15 @@ vmd <- data.frame(labelDescription=c("Sample ID","Tissue type","Oxygen status","
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
 
+colf1 <- gl(1,11,labels="lightblue")
+colf2 <- gl(1,12,labels="pink")
+colf <- factor(c(levels(colf1)[colf1],levels(colf2)[colf2]))
+group_color <- as.character(colf)
+#如果要调整cel文件顺序，使用类似命令即可
+#sampleNames(gse)
+##"GSM286407" "GSM286408" ...
+#gse <- gse[,c("GSM286408","GSM286407", ...)]
+
 library(annotate)
 gse_annotation <- annPkgName(gse@annotation,type="db")
 #biocLite(gse_annotation)
@@ -31,13 +40,13 @@ plot(gse_qc)
 library(affyPLM)
 gse_PLM <- fitPLM(gse)
 par(mar=c(6,3,2,2))
-boxplot(gse_PLM,main="NUSE",col=rainbow(23),las=3,ylim=c(0.95,1.1),whisklty=0)
-Mbox(gse_PLM,main="RLE",col=rainbow(23),las=3,ylim=c(-0.4,0.4),whisklty=0)
+boxplot(gse_PLM,main="NUSE",col=group_color,las=3,ylim=c(0.95,1.1),whisklty=0)
+Mbox(gse_PLM,main="RLE",col=group_color,las=3,ylim=c(-0.4,0.4),whisklty=0)
 
 gse_deg <- AffyRNAdeg(gse)
 par(mar=c(5,3,3,0))
-plotAffyRNAdeg(gse_deg,col=rainbow(23))
-legend("topleft",rownames(pData(gse)),col=rainbow(23),lwd=1,ncol=4,inset=0.05,cex=0.5)
+plotAffyRNAdeg(gse_deg,col=group_color)
+legend("topleft",rownames(pData(gse)),col=group_color,lwd=1,ncol=4,inset=0.05,cex=0.5)
 ```
 
 均一化
@@ -45,7 +54,7 @@ legend("topleft",rownames(pData(gse)),col=rainbow(23),lwd=1,ncol=4,inset=0.05,ce
 ```{r echo=FALSE}
 gse_rma <- rma(gse)
 par(mar=c(6,3,2,2))
-boxplot(gse_rma,col=rainbow(23),las=3,main="RMA")
+boxplot(gse_rma,col=group_color,las=3,main="RMA")
 ```
 
 选取差异表达基因
