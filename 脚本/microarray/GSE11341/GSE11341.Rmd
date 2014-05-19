@@ -45,8 +45,9 @@ Mbox(gse_PLM,main="RLE",col=group_color,las=3,ylim=c(-0.4,0.4),whisklty=0)
 
 gse_deg <- AffyRNAdeg(gse)
 par(mar=c(5,3,3,0))
-plotAffyRNAdeg(gse_deg,col=group_color)
-legend("topleft",rownames(pData(gse)),col=group_color,lwd=1,ncol=4,inset=0.05,cex=0.5)
+colRNAdeg <- rainbow(23)
+plotAffyRNAdeg(gse_deg,col=colRNAdeg)
+legend("topleft",rownames(pData(gse)),col=colRNAdeg,lwd=1,ncol=4,inset=0.05,cex=0.5)
 ```
 
 均一化
