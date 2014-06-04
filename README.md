@@ -16,4 +16,6 @@ $$$是要在github.com先创立的，然后git push origin master就可以了。
 4. 显示所有远程仓库git remote -v，重命名git remote rename 原名 新名，删除远程仓
 库git remote rm \*\*\*。
 
-> http://bqnw.me/post/dplyr-note#11-filter
+> http://bqnw.me/post/dplyr-note#11-filter R包dplyr笔记
+
+##今天开始用图形化的git-gui 4th, June 2014
