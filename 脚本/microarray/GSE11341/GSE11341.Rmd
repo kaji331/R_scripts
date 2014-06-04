@@ -82,7 +82,7 @@ cm <- makeContrasts(
   levels=design)
 fit2 <- contrasts.fit(fit,cm)
 fit2 <- eBayes(fit2)
-dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"))
+dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
 dif$EntrezID <- getEG(rownames(dif),gse_annotation)
