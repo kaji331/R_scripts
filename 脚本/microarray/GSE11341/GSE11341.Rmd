@@ -19,6 +19,10 @@ colf1 <- gl(1,11,labels="lightblue")
 colf2 <- gl(1,12,labels="pink")
 colf <- factor(c(levels(colf1)[colf1],levels(colf2)[colf2]))
 group_color <- as.character(colf)
+#或者
+#colf <- factor(c(rep("lightblue",11),rep("pink",12)))
+#group_color <- as.character(colf)
+
 #如果要调整cel文件顺序，使用类似命令即可
 #sampleNames(gse)
 ##"GSM286407" "GSM286408" ...
