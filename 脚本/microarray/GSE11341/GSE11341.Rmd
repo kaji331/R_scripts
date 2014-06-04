@@ -58,7 +58,7 @@ legend("topleft",rownames(pData(gse)),col=colRNAdeg,lwd=1,ncol=4,inset=0.05,cex=
 
 ```{r echo=FALSE}
 gse_rma <- rma(gse)
-par(mar=c(6,3,2,2))
+par(mar=c(8,3,2,2))
 boxplot(gse_rma,col=group_color,las=3,main="RMA")
 ```
 
