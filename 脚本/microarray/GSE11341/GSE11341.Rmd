@@ -19,6 +19,10 @@ colf1 <- gl(1,11,labels="lightblue")
 colf2 <- gl(1,12,labels="pink")
 colf <- factor(c(levels(colf1)[colf1],levels(colf2)[colf2]))
 group_color <- as.character(colf)
+#或者
+#colf <- factor(c(rep("lightblue",11),rep("pink",12)))
+#group_color <- as.character(colf)
+
 #如果要调整cel文件顺序，使用类似命令即可
 #sampleNames(gse)
 ##"GSM286407" "GSM286408" ...
@@ -39,7 +43,7 @@ plot(gse_qc)
 
 library(affyPLM)
 gse_PLM <- fitPLM(gse)
-par(mar=c(6,3,2,2))
+par(mar=c(8,3,2,2))
 boxplot(gse_PLM,main="NUSE",col=group_color,las=3,ylim=c(0.95,1.1),whisklty=0)
 Mbox(gse_PLM,main="RLE",col=group_color,las=3,ylim=c(-0.4,0.4),whisklty=0)
 
@@ -54,7 +58,7 @@ legend("topleft",rownames(pData(gse)),col=colRNAdeg,lwd=1,ncol=4,inset=0.05,cex=
 
 ```{r echo=FALSE}
 gse_rma <- rma(gse)
-par(mar=c(6,3,2,2))
+par(mar=c(8,3,2,2))
 boxplot(gse_rma,col=group_color,las=3,main="RMA")
 ```
 
@@ -78,8 +82,7 @@ cm <- makeContrasts(
   levels=design)
 fit2 <- contrasts.fit(fit,cm)
 fit2 <- eBayes(fit2)
-dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=1000)
-dif <- dif[1:355,]
+dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
 dif$EntrezID <- getEG(rownames(dif),gse_annotation)
