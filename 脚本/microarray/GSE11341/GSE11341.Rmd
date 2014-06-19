@@ -86,6 +86,33 @@ dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24",
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
 dif$EntrezID <- getEG(rownames(dif),gse_annotation)
+
+#区分上调基因，下调基因和上下调不一致基因
+d <- dif[!is.na(dif$symbols),]
+d_upORdown <- d[d$Cardiac3 < 0 |
+                  d$Cardiac24 < 0 |
+                  d$Cardiac48 < 0 |
+                  d$Lung3 < 0 |
+                  d$Lung24 < 0 |
+                  d$Lung48 < 0,]
+d_upORdown <- d_upORdown[!(d_upORdown$Cardiac3 < 0 &
+                             d_upORdown$Cardiac24 < 0 &
+                             d_upORdown$Cardiac48 < 0 &
+                             d_upORdown$Lung3 < 0 &
+                             d_upORdown$Lung24 < 0 &
+                             d_upORdown$Lung48 < 0),]
+d_down <- d[d$Cardiac3 < 0 &
+              d$Cardiac24 < 0 &
+              d$Cardiac48 < 0 &
+              d$Lung3 < 0 &
+              d$Lung24 < 0 &
+              d$Lung48 < 0,]
+d_up <- d[!(d$Cardiac3 < 0 |
+              d$Cardiac24 < 0 |
+              d$Cardiac48 < 0 |
+              d$Lung3 < 0 |
+              d$Lung24 < 0 |
+              d$Lung48 < 0),]
 ```
 
 热图
