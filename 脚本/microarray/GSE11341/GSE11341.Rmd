@@ -146,7 +146,7 @@ humanExpr_up <- gse_eset[match(rownames(d_up),rownames(gse_eset)),]
 humanExpr_up <- cbind(humanGeneInput_up[,"EntrezID"],humanExpr_up)
 humanGeneInput_up <- humanGeneInput_up[!is.na(humanGeneInput_up[,1]),]
 humanExpr_up <- humanExpr_up[!is.na(humanExpr_up[,1]),]
-y_up <- geneAnswersBuilder(humanGeneInput_up,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.1,geneExpressionProfile=humanExpr_up,verbose=F)
+y_up <- geneAnswersBuilder(humanGeneInput_up,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.01,geneExpressionProfile=humanExpr_up,verbose=F)
 yy_up <- geneAnswersReadable(y_up,verbose=F)
 geneAnswersConceptNet(yy_up,colorValueColumn="F",centroidSize="pvalue",output="interactive")
 yyy_up <- geneAnswersSort(yy_up,sortBy="pvalue")
@@ -157,7 +157,7 @@ humanExpr_down <- gse_eset[match(rownames(d_down),rownames(gse_eset)),]
 humanExpr_down <- cbind(humanGeneInput_down[,"EntrezID"],humanExpr_down)
 humanGeneInput_down <- humanGeneInput_down[!is.na(humanGeneInput_down[,1]),]
 humanExpr_down <- humanExpr_down[!is.na(humanExpr_down[,1]),]
-y_down <- geneAnswersBuilder(humanGeneInput_down,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.1,geneExpressionProfile=humanExpr_down,verbose=F)
+y_down <- geneAnswersBuilder(humanGeneInput_down,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.01,geneExpressionProfile=humanExpr_down,verbose=F)
 yy_down <- geneAnswersReadable(y_down,verbose=F)
 geneAnswersConceptNet(yy_down,colorValueColumn="F",centroidSize="pvalue",output="interactive")
 yyy_down <- geneAnswersSort(yy_down,sortBy="pvalue")
@@ -168,7 +168,7 @@ humanExpr_upORdown <- gse_eset[match(rownames(d_upORdown),rownames(gse_eset)),]
 humanExpr_upORdown <- cbind(humanGeneInput_upORdown[,"EntrezID"],humanExpr_upORdown)
 humanGeneInput_upORdown <- humanGeneInput_upORdown[!is.na(humanGeneInput_upORdown[,1]),]
 humanExpr_upORdown <- humanExpr_upORdown[!is.na(humanExpr_upORdown[,1]),]
-y_upORdown <- geneAnswersBuilder(humanGeneInput_upORdown,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.1,geneExpressionProfile=humanExpr_upORdown,verbose=F)
+y_upORdown <- geneAnswersBuilder(humanGeneInput_upORdown,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.01,geneExpressionProfile=humanExpr_upORdown,verbose=F)
 yy_upORdown <- geneAnswersReadable(y_upORdown,verbose=F)
 geneAnswersConceptNet(yy_upORdown,colorValueColumn="F",centroidSize="pvalue",output="interactive")
 yyy_upORdown <- geneAnswersSort(yy_upORdown,sortBy="pvalue")
