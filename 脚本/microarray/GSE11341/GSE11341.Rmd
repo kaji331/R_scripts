@@ -19,18 +19,18 @@ colf1 <- gl(1,11,labels="lightblue")
 colf2 <- gl(1,12,labels="pink")
 colf <- factor(c(levels(colf1)[colf1],levels(colf2)[colf2]))
 group_color <- as.character(colf)
-#或者
-#colf <- factor(c(rep("lightblue",11),rep("pink",12)))
-#group_color <- as.character(colf)
+# 或者
+# colf <- factor(c(rep("lightblue",11),rep("pink",12)))
+# group_color <- as.character(colf)
 
-#如果要调整cel文件顺序，使用类似命令即可
-#sampleNames(gse)
-##"GSM286407" "GSM286408" ...
-#gse <- gse[,c("GSM286408","GSM286407", ...)]
+# 如果要调整cel文件顺序，使用类似命令即可
+# sampleNames(gse)
+## "GSM286407" "GSM286408" ...
+# gse <- gse[,c("GSM286408","GSM286407", ...)]
 
 library(annotate)
 gse_annotation <- annPkgName(gse@annotation,type="db")
-#biocLite(gse_annotation)
+# biocLite(gse_annotation)
 library(gse_annotation,character.only=T)
 ```
 
@@ -82,14 +82,15 @@ cm <- makeContrasts(
   levels=design)
 fit2 <- contrasts.fit(fit,cm)
 fit2 <- eBayes(fit2)
-#选取ajust p-value < 0.01的基因
-#各个条件下对应值是差异表达值的log2对数值
+# 选取ajust p-value < 0.01的基因
+# 各个条件下对应值是差异表达值的log2对数值
 dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
 dif$EntrezID <- getEG(rownames(dif),gse_annotation)
 
-#区分上调基因，下调基因和上下调不一致基因
+# 区分上调基因，下调基因和上下调不一致基因
+# 剔除没有注释名称的基因
 d <- dif[!is.na(dif$symbols),]
 d_upORdown <- d[d$Cardiac3 < 0 |
                   d$Cardiac24 < 0 |
@@ -129,21 +130,31 @@ pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_c
 统计分析及可视化
 
 ```{r echo=FALSE}
-#回头换成clusterProfiler包，出柱状图
-library(GOstats)
-entrezUniverse <- unique(unlist(mget(rownames(gse_eset),hgu133aENTREZID)))
-entrezSelected <- unique(d[!is.na(d$EntrezID),"EntrezID"])
-params <- new("GOHyperGParams",geneIds=entrezSelected,universeGeneIds=entrezUniverse,annotation=gse_annotation,ontology="BP",pvalueCutoff=0.001,conditional=F,testDirection="over")
-hgOver <- hyperGTest(params)
-bp <- summary(hgOver)
-htmlReport(hgOver,file="../ALL_go.html")
-library(Rgraphviz)
-ghandle <- goDag(hgOver)
-subGHandle <- subGraph(snodes=as.character(summary(hgOver)[,1]),graph=ghandle)
-plot(subGHandle)
+# 换成clusterProfiler包，出柱状图
+library(clusterProfiler)
+ego_up <- enrichGO(gene=d_up$EntrezID,ont="BP",pvalueCutoff=0.01,readable=T)
+ego_down <- enrichGO(gene=d_down$EntrezID,ont="BP",pvalueCutoff=0.01,readable=T)
+ego_upORdown <- enrichGO(gene=d_upORdown$EntrezID,ont="BP",pvalueCutoff=0.01,readable=T)
 
-#分别对上调，下调和上下调不明确的基因进行KEGG分析
-#回头用ReactomePA包进行Reactome分析
+# library(GOstats)
+# entrezUniverse <- unique(unlist(mget(rownames(gse_eset),hgu133aENTREZID)))
+# entrezSelected <- unique(d[!is.na(d$EntrezID),"EntrezID"])
+# params <- new("GOHyperGParams",geneIds=entrezSelected,universeGeneIds=entrezUniverse,annotation=gse_annotation,ontology="BP",pvalueCutoff=0.001,conditional=F,testDirection="over")
+# hgOver <- hyperGTest(params)
+# bp <- summary(hgOver)
+# htmlReport(hgOver,file="../ALL_go.html")
+# library(Rgraphviz)
+# ghandle <- goDag(hgOver)
+# subGHandle <- subGraph(snodes=as.character(summary(hgOver)[,1]),graph=ghandle)
+# plot(subGHandle)
+
+# 分别对上调，下调和上下调不明确的基因进行KEGG分析
+# 由于KEGG缺乏维护，现在开始流行Reactome分析。不过ReactomePA和clusterProfiler包分析enrichPathway和enrichKEGG结果数量明显少于GeneAnswers包，还有未来的项目验证。
+# library(ReactomePA)
+# epa_up <- enrichPathway(gene=d_up$EntrezID,pvalueCutoff=0.01,readable=T)
+# epa_down <- enrichPathway(gene=d_down$EntrezID,pvalueCutoff=0.01,readable=T)
+# epa_upORdown <- enrichPathway(gene=d_upORdown$EntrezID,pvalueCutoff=0.01,readable=T)
+
 library(GeneAnswers)
 humanGeneInput_up <- d_up[,c("EntrezID","F","adj.P.Val")]
 humanExpr_up <- gse_eset[match(rownames(d_up),rownames(gse_eset)),]
