@@ -82,6 +82,8 @@ cm <- makeContrasts(
   levels=design)
 fit2 <- contrasts.fit(fit,cm)
 fit2 <- eBayes(fit2)
+#选取ajust p-value < 0.01的基因
+#各个条件下对应值是差异表达值的log2对数值
 dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
@@ -119,17 +121,18 @@ d_up <- d[!(d$Cardiac3 < 0 |
 
 ```{r echo=FALSE,}
 library(pheatmap)
-selected <- gse_eset[rownames(dif),]
-rownames(selected) <- dif$symbols
+selected <- gse_eset[rownames(d),]
+rownames(selected) <- d$symbols
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
 ```
 
 统计分析及可视化
 
 ```{r echo=FALSE}
+#回头换成clusterProfiler包，出柱状图
 library(GOstats)
 entrezUniverse <- unique(unlist(mget(rownames(gse_eset),hgu133aENTREZID)))
-entrezSelected <- unique(dif[!is.na(dif$EntrezID),"EntrezID"])
+entrezSelected <- unique(d[!is.na(d$EntrezID),"EntrezID"])
 params <- new("GOHyperGParams",geneIds=entrezSelected,universeGeneIds=entrezUniverse,annotation=gse_annotation,ontology="BP",pvalueCutoff=0.001,conditional=F,testDirection="over")
 hgOver <- hyperGTest(params)
 bp <- summary(hgOver)
@@ -140,6 +143,7 @@ subGHandle <- subGraph(snodes=as.character(summary(hgOver)[,1]),graph=ghandle)
 plot(subGHandle)
 
 #分别对上调，下调和上下调不明确的基因进行KEGG分析
+#回头用ReactomePA包进行Reactome分析
 library(GeneAnswers)
 humanGeneInput_up <- d_up[,c("EntrezID","F","adj.P.Val")]
 humanExpr_up <- gse_eset[match(rownames(d_up),rownames(gse_eset)),]
