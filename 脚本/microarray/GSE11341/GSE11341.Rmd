@@ -15,13 +15,13 @@ vmd <- data.frame(labelDescription=c("Sample ID","Tissue type","Oxygen status","
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
 
-colf1 <- gl(1,11,labels="lightblue")
-colf2 <- gl(1,12,labels="pink")
-colf <- factor(c(levels(colf1)[colf1],levels(colf2)[colf2]))
-group_color <- as.character(colf)
+factor(c(rep("lightblue",11),rep("pink",12))) %:>% 
+  (group_color <- as.character(.))
 # 或者
-# colf <- factor(c(rep("lightblue",11),rep("pink",12)))
-# group_color <- as.character(colf)
+# colf1 <- gl(1,11,labels="lightblue")
+# colf2 <- gl(1,12,labels="pink")
+# factor(c(levels(colf1)[colf1],levels(colf2)[colf2])) %:>% 
+#   (group_color <- as.character(.))
 
 # 如果要调整cel文件顺序，使用类似命令即可
 # sampleNames(gse)
@@ -38,20 +38,25 @@ library(gse_annotation,character.only=T)
 
 ```{r echo=FALSE}
 library(simpleaffy)
-gse_qc <- qc(gse)
-plot(gse_qc)
+qc(gse) %>>% plot
 
 library(affyPLM)
-gse_PLM <- fitPLM(gse)
 par(mar=c(8,3,2,2))
-boxplot(gse_PLM,main="NUSE",col=group_color,las=3,ylim=c(0.95,1.1),whisklty=0)
-Mbox(gse_PLM,main="RLE",col=group_color,las=3,ylim=c(-0.4,0.4),whisklty=0)
+fitPLM(gse) %:>% {
+  Mbox(.,main="RLE",col=group_color,las=3,ylim=c(-0.4,0.4),whisklty=0)
+  boxplot(.,main="NUSE",col=group_color,las=3,ylim=c(0.95,1.1),whisklty=0)
+}
 
-gse_deg <- AffyRNAdeg(gse)
 par(mar=c(5,3,3,0))
-colRNAdeg <- rainbow(23)
-plotAffyRNAdeg(gse_deg,col=colRNAdeg)
-legend("topleft",rownames(pData(gse)),col=colRNAdeg,lwd=1,ncol=4,inset=0.05,cex=0.5)
+plotRNAdeg <- function(x){
+  pp <- function(x,col){
+    plotAffyRNAdeg(x,col=col)
+    legend("topleft",rownames(pData(gse)),
+           col=col,lwd=1,ncol=4,inset=0.05,cex=0.5)
+  }
+  rainbow(23) %:>% pp(x,.)
+}
+AffyRNAdeg(gse) %>>% plotRNAdeg
 ```
 
 均一化
@@ -67,7 +72,7 @@ boxplot(gse_rma,col=group_color,las=3,main="RMA")
 ```{r echo=FALSE}
 library(limma)
 gse_eset <- exprs(gse_rma)
-levels <- factor(paste(gse_sample$Tissue,gse_sample$Oxygen,sep="."))
+factor(paste(gse_sample$Tissue,gse_sample$Oxygen,sep="."))
 design <- model.matrix(~0+levels)
 colnames(design) <- levels(levels)
 corfit <- duplicateCorrelation(gse_eset,design,block=gse_sample$Repeat)
@@ -80,11 +85,12 @@ cm <- makeContrasts(
   Lung24=Lung.cells_24hrHypoxia-Lung.cells_Normoxia,
   Lung48=Lung.cells_48hrHypoxia-Lung.cells_Normoxia,
   levels=design)
-fit2 <- contrasts.fit(fit,cm)
-fit2 <- eBayes(fit2)
 # 选取ajust p-value < 0.01的基因
 # 各个条件下对应值是差异表达值的log2对数值
-dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
+contrasts.fit(fit,cm) %>>% eBayes %:>% (dif <- topTable(.,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335))
+# fit2 <- contrasts.fit(fit,cm)
+# fit2 <- eBayes(fit2)
+# dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
 
 dif$symbols <- getSYMBOL(rownames(dif),gse_annotation)
 dif$EntrezID <- getEG(rownames(dif),gse_annotation)
@@ -149,7 +155,7 @@ ego_upORdown <- enrichGO(gene=d_upORdown$EntrezID,ont="BP",pvalueCutoff=0.01,rea
 # plot(subGHandle)
 
 # 分别对上调，下调和上下调不明确的基因进行KEGG分析
-# 由于KEGG缺乏维护，现在开始流行Reactome分析。不过ReactomePA和clusterProfiler包分析enrichPathway和enrichKEGG结果数量明显少于GeneAnswers包，还有未来的项目验证。
+# 由于KEGG缺乏维护，现在开始流行Reactome分析。不过ReactomePA和clusterProfiler包分析enrichPathway和enrichKEGG结果数量明显少于GeneAnswers包，还有赖于未来的项目验证。
 # library(ReactomePA)
 # epa_up <- enrichPathway(gene=d_up$EntrezID,pvalueCutoff=0.01,readable=T)
 # epa_down <- enrichPathway(gene=d_down$EntrezID,pvalueCutoff=0.01,readable=T)
