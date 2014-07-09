@@ -30,8 +30,10 @@ factor(c(rep("lightblue",11),rep("pink",12))) %:>%
 
 library(annotate)
 gse_annotation <- annPkgName(gse@annotation,type="db")
-# biocLite(gse_annotation)
-library(gse_annotation,character.only=T)
+if(!require(gse_annotation,character.only=T)) {
+  biocLite(gse_annotation)
+  library(gse_annotation,character.only=T)
+}
 ```
 
 质量检验
