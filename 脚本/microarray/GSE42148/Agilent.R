@@ -1,5 +1,5 @@
 # Version info: R 2.14.1, Biobase 2.15.3, GEOquery 2.23.2, limma 3.10.1
-# R scripts generated  Thu Jul 10 05:46:25 EDT 2014
+# R scripts generated  Thu Jul 10 06:21:38 EDT 2014
 
 ################################################################
 #   Differential expression analysis with limma
@@ -33,7 +33,7 @@ fit2 <- contrasts.fit(fit, cont.matrix)
 fit2 <- eBayes(fit2, 0.01)
 tT <- topTable(fit2, adjust="fdr", sort.by="B", number=250)
 
-tT <- subset(tT, select=c("ID","adj.P.Val","P.Value","t","B","logFC","GB_ACC","SEQUENCE","SPOT_ID"))
+tT <- subset(tT, select=c("ID","adj.P.Val","P.Value","t","B","logFC","GeneName"))
 write.table(tT, file=stdout(), row.names=F, sep="\t")
 
 ################################################################
