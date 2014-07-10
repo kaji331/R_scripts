@@ -74,7 +74,7 @@ boxplot(gse_rma,col=group_color,las=3,main="RMA")
 ```{r echo=FALSE}
 library(limma)
 gse_eset <- exprs(gse_rma)
-factor(paste(gse_sample$Tissue,gse_sample$Oxygen,sep="."))
+levels <- factor(paste(gse_sample$Tissue,gse_sample$Oxygen,sep="."))
 design <- model.matrix(~0+levels)
 colnames(design) <- levels(levels)
 corfit <- duplicateCorrelation(gse_eset,design,block=gse_sample$Repeat)
