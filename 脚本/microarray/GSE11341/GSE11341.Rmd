@@ -89,7 +89,7 @@ cm <- makeContrasts(
   levels=design)
 # 选取ajust p-value < 0.01的基因
 # 各个条件下对应值是差异表达值的log2对数值
-contrasts.fit(fit,cm) %>>% eBayes %:>% (dif <- topTable(.,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335))
+contrasts.fit(fit,cm) %>>% eBayes %:>% (dif <- topTable(.,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=1000,p.value=0.01))
 # fit2 <- contrasts.fit(fit,cm)
 # fit2 <- eBayes(fit2)
 # dif <- topTable(fit2,coef=c("Cardiac3","Cardiac24","Cardiac48","Lung3","Lung24","Lung48"),number=335)
