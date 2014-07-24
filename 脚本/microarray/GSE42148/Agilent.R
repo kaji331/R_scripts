@@ -54,9 +54,28 @@ fit <- lmFit(gset, design)
 cont.matrix <- makeContrasts(CAD-Control, levels=design)
 fit2 <- contrasts.fit(fit, cont.matrix)
 fit2 <- eBayes(fit2)
-tT <- topTable(fit2, number=494)
+tT <- topTable(fit2, number=1615)
 
 tT <- subset(tT, select=c("ID","adj.P.Val","P.Value","t","B","logFC","GeneName"))
+tT <- tT[!is.na(tT$GeneName),]
+dup <- duplicated(tT$GeneName)
+tT <- tT[!dup,]
+tT <- tT[!(regexpr("^LOC[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^lincRNA",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^ERCC-[0-9]",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^ENST[0-9]",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^A_[0-9]",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^RP[0-9]+-[0-9]+",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^BE[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^FLJ[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("DarkCorner",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^hCG_[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^ETG[0-9]+_[0-9]+",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^CB[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^AK[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^CR[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^BQ[0-9]{4}",tT$GeneName) == 1),]
+tT <- tT[!(regexpr("^NP[0-9]{4}",tT$GeneName) == 1),]
 # write.table(tT, file=stdout(), row.names=F, sep="\t")
 
 # 上下调差异基因识别
@@ -65,11 +84,36 @@ tT_down <- tT[tT$logFC < 0,]
 
 # 热图
 library(pheatmap)
-selected <- gset[rownames(tT[str_length(tT$GeneName) < 9,]),]
-rownames(selected) <- tT[str_length(tT$GeneName) < 9,]$GeneName
+selected <- ex[rownames(tT),]
+rownames(selected) <- tT$GeneName
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
 
 # 换成clusterProfiler包，出柱状图
 library(clusterProfiler)
-ego_up <- enrichGO(gene=tT_up$ID,ont="BP",pvalueCutoff=0.01,readable=T)
-ego_down <- enrichGO(gene=tT_down$ID,ont="BP",pvalueCutoff=0.01,readable=T)
+ego_up <- enrichGO(gene=tT_up$ID,ont="BP",pvalueCutoff=0.05,readable=T)
+ego_down <- enrichGO(gene=tT_down$ID,ont="BP",pvalueCutoff=0.05,readable=T)
+barplot(ego_up)
+barplot(ego_down)
+
+library(GeneAnswers)
+humanGeneInput_up <- tT_up[,c("ID","B","adj.P.Val")]
+humanExpr_up <- ex[match(rownames(tT_up),rownames(ex)),]
+humanExpr_up <- cbind(humanGeneInput_up[,"ID"],humanExpr_up)
+humanGeneInput_up <- humanGeneInput_up[!is.na(humanGeneInput_up[,1]),]
+humanExpr_up <- humanExpr_up[!is.na(humanExpr_up[,1]),]
+y_up <- geneAnswersBuilder(humanGeneInput_up,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.05,geneExpressionProfile=humanExpr_up,verbose=F)
+yy_up <- geneAnswersReadable(y_up,verbose=F)
+geneAnswersConceptNet(yy_up,colorValueColumn="B",centroidSize="pvalue",output="interactive")
+yyy_up <- geneAnswersSort(yy_up,sortBy="pvalue")
+geneAnswersHeatmap(yyy_up)
+
+humanGeneInput_down <- tT_down[,c("ID","B","adj.P.Val")]
+humanExpr_down <- ex[match(rownames(tT_down),rownames(ex)),]
+humanExpr_down <- cbind(humanGeneInput_down[,"ID"],humanExpr_down)
+humanGeneInput_down <- humanGeneInput_down[!is.na(humanGeneInput_down[,1]),]
+humanExpr_down <- humanExpr_down[!is.na(humanExpr_down[,1]),]
+y_down <- geneAnswersBuilder(humanGeneInput_down,"org.Hs.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.05,geneExpressionProfile=humanExpr_down,verbose=F)
+yy_down <- geneAnswersReadable(y_down,verbose=F)
+geneAnswersConceptNet(yy_down,colorValueColumn="B",centroidSize="pvalue",output="interactive")
+yyy_down <- geneAnswersSort(yy_down,sortBy="pvalue")
+geneAnswersHeatmap(yyy_down)
