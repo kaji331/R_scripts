@@ -19,3 +19,5 @@ $$$是要在github.com先创立的，然后git push origin master就可以了。
 > http://bqnw.me/post/dplyr-note#11-filter R包dplyr笔记
 
 ##今天开始用图形化的git-gui 4th, June 2014
+
+##二代测序参考基因组最好用Ensembl
