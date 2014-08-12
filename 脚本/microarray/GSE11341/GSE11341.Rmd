@@ -6,6 +6,7 @@ GSE11341
 载入数据
 ```{r echo=FALSE}
 setwd("~/Projects/microarray_data/GSE11341/CELs")
+system("ls *.CEL.gz | xargs -n1 7z e")
 library(affy)
 gse <- ReadAffy()
 gse_sample <- read.csv("../Samples.csv")
