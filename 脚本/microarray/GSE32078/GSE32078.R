@@ -61,8 +61,6 @@ design <- model.matrix(~levels)
 colnames(design) <- c("Intercept","Time","day_13.5","day_15.5")
 fit <- lmFit(gse_eset,design)
 cont.matrix <- cbind(day_13.5=c(0,0,1,0),day_15.5=c(0,0,0,1))
-# 选取ajust p-value < 0.01的基因
-# 各个条件下对应值是差异表达值的log2对数值
 fit2 <- contrasts.fit(fit,cont.matrix)
 fit2 <- eBayes(fit2)
 # F p-value选取，可以使用global或者nestedF，这里使用另外更加保守的方法不依赖数据的分布情况
