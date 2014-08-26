@@ -66,7 +66,9 @@ fit2 <- eBayes(fit2)
 # F p-value选取，可以使用global或者nestedF，这里使用另外更加保守的方法不依赖数据的分布情况
 # results <- decideTests(fit2,method="global")
 # results <- decideTests(fit2,method="nestedF")
-grep("AFFX",featureNames(gse_rma)) %>>% summary(fit2$F.p.value[.]) # Min=0.08336，因此p.value取0.08
+i <- grep("AFFX",featureNames(gse_rma))
+summary(fit2$F.p.value[i])
+# Min=0.08336，因此p.value取0.08
 results <- classifyTestsF(fit2,p.value=0.08)
 # 各分组上下调检测数
 summary(results)
