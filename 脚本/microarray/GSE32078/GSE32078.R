@@ -119,9 +119,20 @@ colnames(d_down) <- c("Symbol","ID","Label")
 # colnames(d_13.5_down) <- c("Symbol","ID","Label")
 # colnames(d_15.5_up) <- c("Symbol","ID","Label")
 # colnames(d_15.5_down) <- c("Symbol","ID","Label")
+# 提取表达平均值，F值，和F检验的p值
+d_temp_up <- fit2[rownames(d_up),] %>>% as.data.frame
+d_temp_down <- fit2[rownames(d_down),] %>>% as.data.frame
+d_temp_up <- d_temp_up[,c("Amean","F","F.p.value")]
+d_temp_down <- d_temp_down[,c("Amean","F","F.p.value")]
+
+d_up <- cbind(d_up,d_temp_up)
+d_up <- d_up[order(d_up$F.p.value),]
+d_down <- cbind(d_down,d_temp_down)
+d_down <- d_down[order(d_down$F.p.value),]
 # 去掉上下调不确定的基因（包含了重复的symbol和id）
 d <- rbind(d_up[!(d_up$Symbol %in% d_down$Symbol),],
            d_down[!(d_down$Symbol %in% d_up$Symbol),])
+d <- d[order(d$F.p.value),]
 # d_13.5 <- rbind(d_13.5_up[!(d_13.5_up$Symbol %in% d_13.5_down$Symbol),],
 #                 d_13.5_down[!(d_13.5_down$Symbol %in% d_13.5_up$Symbol),])
 # d_15.5 <- rbind(d_15.5_up[!(d_15.5_up$Symbol %in% d_15.5_down$Symbol),],
@@ -180,10 +191,10 @@ cnetplot(epa_up,fixed=F)
 cnetplot(epa_down,fixed=F)
 
 # library(GeneAnswers)
-# humanGeneInput_up <- as.data.frame(d_up$ID)
-# colnames(humanGeneInput_up) <- "GeneID"
-# humanExpr_up <- gse_eset[match(as.character(d_up$Label),rownames(gse_eset)),]
+# humanGeneInput_up <- d_up[,c("ID","F","F.p.value")]
+# colnames(humanGeneInput_up) <- c("GeneID","F","pvalue")
+# humanExpr_up <- gse_eset[match(rownames(d_up),rownames(gse_eset)),]
 # humanExpr_up <- cbind(d_up$ID,humanExpr_up)
 # y_up <- geneAnswersBuilder(humanGeneInput_up,"org.Mm.eg.db",categoryType="KEGG",testType="hyperG",pvalueT=0.1,geneExpressionProfile=humanExpr_up,verbose=F)
 # yy_up <- geneAnswersReadable(y_up,verbose=F)
-# geneAnswersConceptNet(yy_up,output="interactive")
+# geneAnswersConceptNet(yy_up,colorValueColumn="F",centroidSize="pvalue",output="interactive")
