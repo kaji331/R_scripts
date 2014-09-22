@@ -44,6 +44,7 @@ print(xtable(data_t),type="html")
 library(reshape2)
 data_t <- melt(data_t,value.name="OD等")
 names(data_t)[2] <- "Protein等"
+data_t[,2] <- as.character(data_t[,2]) #避免不能方差分析
 ```
 
 ```{r echo=FALSE,results='asis'}
