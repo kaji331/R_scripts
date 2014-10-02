@@ -1,4 +1,4 @@
-# GSE44565
+# GSE48060
 # 载入数据
 
 setwd("~/Projects/microarray_data/GSE48060/CELs")
