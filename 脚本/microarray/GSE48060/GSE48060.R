@@ -5,14 +5,16 @@ setwd("~/Projects/microarray_data/GSE48060/CELs")
 system("ls *.cel.gz | xargs -n1 7z e")
 library(affy)
 gse <- ReadAffy()
-gse_sample <- read.csv("../Samples.csv")
-sampleNames(gse) <- sub("\\.CEL$","",sampleNames(gse))
+gse_sample <- read.csv("../GSE48060 Samples.csv")
+sampleNames(gse) <- sub("\\.cel$","",sampleNames(gse))
+sampleNames(gse)[21] <- "GSM1167092_Nel010142-HG-U133Plus2"
 mt <- match(gse_sample$SampleID,sampleNames(gse))
-vmd <- data.frame(labelDescription=c("Sample ID","Time","Status","Repeat times"))
+vmd <- data.frame(labelDescription=c("Sample ID","Tissue","Condition","Label"))
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
 
-group_color <- (factor(c(rep("lightblue",6),rep("pink",6)))) %>>% as.character
+group_color <- (factor(c(rep("lightblue",5),rep("pink",26),rep("lightgreen",21)))) %>>%
+  as.character
 
 library(annotate)
 gse_annotation <- annPkgName(gse@annotation,type="db")
