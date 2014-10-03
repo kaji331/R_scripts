@@ -12,6 +12,7 @@ mt <- match(gse_sample$SampleID,sampleNames(gse))
 vmd <- data.frame(labelDescription=c("Sample ID","Tissue","Condition","Label"))
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
+sampleNames(gse) <- sub("_Nel0101(.*)","",sampleNames(gse))
 
 group_color <- (factor(c(rep("lightblue",5),rep("pink",26),rep("lightgreen",21)))) %>>%
   as.character
