@@ -6,6 +6,12 @@ system("ls *.cel.gz | xargs -n1 7z e")
 library(affy)
 gse <- ReadAffy()
 gse_sample <- read.csv("../GSE48060 Samples.csv")
+gse_sample <- cbind(gse_sample,Group=c("yes",rep("no",5),"yes",rep("no",2),
+                                       "yes",rep("no",6),"yes",rep("no",8),
+                                       "yes",rep("no",4),rep("yes",10),
+                                       rep("no",10),"no","yes"))
+temp <- grep("patient_with_recurrent_events",gse_sample$Condition)
+gse_sample$Condition[temp] <- "with" #???
 sampleNames(gse) <- sub("\\.cel$","",sampleNames(gse))
 sampleNames(gse)[21] <- "GSM1167092_Nel010142-HG-U133Plus2"
 mt <- match(gse_sample$SampleID,sampleNames(gse))
@@ -49,9 +55,8 @@ AffyRNAdeg(gse) %>>% plotRNAdeg
 
 # 均一化
 # 将芯片数据分成with recurrent events和without recurrent events两组
-# ???
-recurrent_array <- match("patient_with_recurrent_events",gse$Condition)
-no_recurrent_array <- match("patient_without_recurrent_events",gse$Condition)
+recurrent_array <- grep("patient_with_recurrent_events",gse$Condition)
+no_recurrent_array <- grep("patient_without_recurrent_events",gse$Condition)
 gse_wr <- gse[,-no_recurrent_array]
 gse_wor <- gse[,-recurrent_array]
 
@@ -63,17 +68,55 @@ boxplot(gse_rma,col=group_color,las=3,main="RMA")
 
 # 选取差异表达基因
 
+# method 1
 library(limma)
+gse_wr_eset <- exprs(gse_wr_rma)
+group_wr <- gse_sample[gse_sample$Condition != "patient_without_recurrent_events",]
+design <- model.matrix(~0+factor(group_wr$Condition))
+colnames(design) <- c("normal_control","patient_with_recurrent_events")
+fit <- lmFit(gse_wr_eset,design)
+cm <- makeContrasts(recurrent_events=patient_with_recurrent_events-normal_control,
+                    levels=design)
+fit2 <- contrasts.fit(fit,cm)
+fit3 <- eBayes(fit2)
+data_wr <- topTable(fit3,coef="recurrent_events",p.value=0.05)
+
+gse_wor_eset <- exprs(gse_wor_rma)
+group_wor <- gse_sample[gse_sample$Condition != "patient_with_recurrent_events",]
+design <- model.matrix(~0+factor(group_wor$Condition))
+colnames(design) <- c("normal_control","patient_without_recurrent_events")
+fit <- lmFit(gse_wor_eset,design)
+cm <- makeContrasts(no_recurrent_events=patient_without_recurrent_events-normal_control,
+                    levels=design)
+fit2 <- contrasts.fit(fit,cm)
+fit3 <- eBayes(fit2)
+data_wor <- topTable(fit3,coef="no_recurrent_events",p.value=0.05)
+
+# method 2
 gse_eset <- exprs(gse_rma)
 design <- model.matrix(~0+factor(gse_sample$Condition))
 colnames(design) <- c("normal_control","patient_without_recurrent_events",
                       "patient_with_recurrent_events")
 fit <- lmFit(gse_eset,design)
-cm <- makeContrasts(no_recurrent_events=patient_without_recurrent_events-normal_control,
-                    recurrent_events=patient_with_recurrent_events-normal_control,
-                    com=patient_with_recurrent_events-patient_without_recurrent_events,
+cm <- makeContrasts(no=patient_without_recurrent_events-normal_control,
+                    yes=patient_with_recurrent_events-normal_control,
+                    dif=(patient_with_recurrent_events-normal_control)-(patient_without_recurrent_events-normal_control),
                     levels=design)
 fit2 <- contrasts.fit(fit,cm)
+fit3 <- eBayes(fit2)
+
+# method 3
+gse_eset <- exprs(gse_rma)
+levels <- factor(paste(gse_sample$Time,gse_sample$Status,sep="."))
+contrasts(levels) <- cbind(normal_control=c(1,0,0),
+                          patient_without_recurrent_events=c(0,1,0),
+                          patient_with_recurrent_events=c(0,0,1)) #???
+design <- model.matrix(~levels)
+colnames(design) <- c("normal_control","patient_without_recurrent_events",
+                      "patient_with_recurrent_events")
+fit <- lmFit(gse_eset,design)
+cont.matrix <- cbind(day_13.5=c(0,0,1,0),day_15.5=c(0,0,0,1))
+fit2 <- contrasts.fit(fit,cont.matrix)
 fit3 <- eBayes(fit2)
 # F p-value选取，可以使用global或者nestedF，这里使用另外更加保守的方法不依赖数据的分布情况
 # results <- decideTests(fit2,method="global")
