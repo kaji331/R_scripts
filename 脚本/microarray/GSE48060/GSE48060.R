@@ -10,17 +10,16 @@ gse_sample <- cbind(gse_sample,Group=c("yes",rep("no",5),"yes",rep("no",2),
                                        "yes",rep("no",6),"yes",rep("no",8),
                                        "yes",rep("no",4),rep("yes",10),
                                        rep("no",10),"no","yes"))
-temp <- grep("patient_with_recurrent_events",gse_sample$Condition)
-gse_sample$Condition[temp] <- "with" #???
+gse_sample$Condition <- c(rep("Disease",30),rep("Control",20),"Disease","Control")
 sampleNames(gse) <- sub("\\.cel$","",sampleNames(gse))
 sampleNames(gse)[21] <- "GSM1167092_Nel010142-HG-U133Plus2"
 mt <- match(gse_sample$SampleID,sampleNames(gse))
-vmd <- data.frame(labelDescription=c("Sample ID","Tissue","Condition","Label"))
+vmd <- data.frame(labelDescription=c("Sample ID","Tissue","Condition","Label","Group"))
 phenoData(gse) <- new("AnnotatedDataFrame",data=gse_sample[mt,],varMetadata=vmd)
 sampleNames(gse) <- sampleNames(gse@protocolData)
 sampleNames(gse) <- sub("_Nel0101(.*)","",sampleNames(gse))
 
-group_color <- (factor(c(rep("lightblue",5),rep("pink",26),rep("lightgreen",21)))) %>>%
+group_color <- (factor(c(rep("lightblue",30),rep("pink",20),"lightblue","pink"))) %>>%
   as.character
 
 library(annotate)
@@ -54,184 +53,145 @@ plotRNAdeg <- function(x){
 AffyRNAdeg(gse) %>>% plotRNAdeg
 
 # 均一化
-# 将芯片数据分成with recurrent events和without recurrent events两组
-recurrent_array <- grep("patient_with_recurrent_events",gse$Condition)
-no_recurrent_array <- grep("patient_without_recurrent_events",gse$Condition)
-gse_wr <- gse[,-no_recurrent_array]
-gse_wor <- gse[,-recurrent_array]
-
 gse_rma <- rma(gse)
-gse_wr_rma <- rma(gse_wr)
-gse_wor_rma <- rma(gse_wor)
 par(mar=c(8,3,2,2))
 boxplot(gse_rma,col=group_color,las=3,main="RMA")
 
+# 注释
+fData(gse_rma) <- featureNames(gse_rma) %>>% getSYMBOL(gse_annotation) %>>%
+  (data.frame(Symbol=.))
+
 # 选取差异表达基因
 
-# method 1
 library(limma)
-gse_wr_eset <- exprs(gse_wr_rma)
-group_wr <- gse_sample[gse_sample$Condition != "patient_without_recurrent_events",]
-design <- model.matrix(~0+factor(group_wr$Condition))
-colnames(design) <- c("normal_control","patient_with_recurrent_events")
-fit <- lmFit(gse_wr_eset,design)
-cm <- makeContrasts(recurrent_events=patient_with_recurrent_events-normal_control,
-                    levels=design)
-fit2 <- contrasts.fit(fit,cm)
-fit3 <- eBayes(fit2)
-data_wr <- topTable(fit3,coef="recurrent_events",p.value=0.05)
-
-gse_wor_eset <- exprs(gse_wor_rma)
-group_wor <- gse_sample[gse_sample$Condition != "patient_with_recurrent_events",]
-design <- model.matrix(~0+factor(group_wor$Condition))
-colnames(design) <- c("normal_control","patient_without_recurrent_events")
-fit <- lmFit(gse_wor_eset,design)
-cm <- makeContrasts(no_recurrent_events=patient_without_recurrent_events-normal_control,
-                    levels=design)
-fit2 <- contrasts.fit(fit,cm)
-fit3 <- eBayes(fit2)
-data_wor <- topTable(fit3,coef="no_recurrent_events",p.value=0.05)
-
-# method 2
 gse_eset <- exprs(gse_rma)
-design <- model.matrix(~0+factor(gse_sample$Condition))
-colnames(design) <- c("normal_control","patient_without_recurrent_events",
-                      "patient_with_recurrent_events")
-fit <- lmFit(gse_eset,design)
-cm <- makeContrasts(no=patient_without_recurrent_events-normal_control,
-                    yes=patient_with_recurrent_events-normal_control,
-                    dif=(patient_with_recurrent_events-normal_control)-(patient_without_recurrent_events-normal_control),
-                    levels=design)
-fit2 <- contrasts.fit(fit,cm)
-fit3 <- eBayes(fit2)
-
-# method 3
-gse_eset <- exprs(gse_rma)
-levels <- factor(paste(gse_sample$Time,gse_sample$Status,sep="."))
-contrasts(levels) <- cbind(normal_control=c(1,0,0),
-                          patient_without_recurrent_events=c(0,1,0),
-                          patient_with_recurrent_events=c(0,0,1)) #???
+levels <- factor(paste(gse_sample$Group,gse_sample$Condition,sep="_"))
+contrasts(levels) <- cbind(Group=c(0,0,1,1),no=c(0,1,0,0),yes=c(0,0,0,1))
 design <- model.matrix(~levels)
-colnames(design) <- c("normal_control","patient_without_recurrent_events",
+colnames(design) <- c("Intercept","Group","patient_without_recurrent_events",
                       "patient_with_recurrent_events")
 fit <- lmFit(gse_eset,design)
-cont.matrix <- cbind(day_13.5=c(0,0,1,0),day_15.5=c(0,0,0,1))
+cont.matrix <- cbind(patient_without_recurrent_events=c(0,0,1,0),
+                     patient_with_recurrent_events=c(0,0,0,1))
 fit2 <- contrasts.fit(fit,cont.matrix)
 fit3 <- eBayes(fit2)
-# F p-value选取，可以使用global或者nestedF，这里使用另外更加保守的方法不依赖数据的分布情况
-# results <- decideTests(fit2,method="global")
-# results <- decideTests(fit2,method="nestedF")
-grep("AFFX",featureNames(gse_rma)) %>>% (summary(fit2$F.p.value[.]))
-# Min=0.08336，因此p.value取0.08
-results <- classifyTestsF(fit2,p.value=0.08)
+# F p-value选取，可以使用global或者nestedF，或者使用另外更加保守的方法不依赖数据的分布情况
+# results <- decideTests(fit3,method="global")
+results <- decideTests(fit3,method="nestedF")
+# grep("AFFX",featureNames(gse_rma)) %>>% (summary(fit3$F.p.value[.]))
+# # Min=0.0000010，因此p.value取0.000001
+# results <- classifyTestsF(fit3,p.value=0.000001)
 # 各分组上下调检测数
 summary(results)
 # 分组间上下调检测交叉数
-table(day_13.5=results[,1],day_15.5=results[,2])
+table(patient_without_recurrent_events=results[,1],
+      patient_with_recurrent_events=results[,2])
 # 分组间上下调检测交叉图
+vennDiagram(results)
 vennDiagram(results,include="up")
 vennDiagram(results,include="down")
 
 # 区分上调基因和下调基因并加上基因名注释
-results_up <- getSYMBOL(rownames(results[results[,1]==1 & results[,2]==1,]),gse_annotation)
-results_down <- getSYMBOL(rownames(results[results[,1]==-1 & results[,2]==-1,]),gse_annotation)
-results13.5_up <- getSYMBOL(rownames(results[results[,1]==1,]),gse_annotation)
-results13.5_down <- getSYMBOL(rownames(results[results[,1]==-1,]),gse_annotation)
-results15.5_up <- getSYMBOL(rownames(results[results[,2]==1,]),gse_annotation)
-results15.5_down <- getSYMBOL(rownames(results[results[,2]==-1,]),gse_annotation)
+results_up <- getSYMBOL(rownames(results[results[,1]==1 & results[,2]==1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
+results_down <- getSYMBOL(rownames(results[results[,1]==-1 & results[,2]==-1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
+results_no_up <- getSYMBOL(rownames(results[results[,1]==1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
+results_no_down <- getSYMBOL(rownames(results[results[,1]==-1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
+results_yes_up <- getSYMBOL(rownames(results[results[,2]==1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
+results_yes_down <- getSYMBOL(rownames(results[results[,2]==-1,]),gse_annotation) %>>%
+  (.[!is.na(.)])
 # 合并基因id注释
 results_up <- cbind(results_up,getEG(names(results_up),gse_annotation))
 results_down <- cbind(results_down,getEG(names(results_down),gse_annotation))
-results13.5_up <- cbind(results13.5_up,getEG(names(results13.5_up),gse_annotation))
-results13.5_down <- cbind(results13.5_down,getEG(names(results13.5_down),gse_annotation))
-results15.5_up <- cbind(results15.5_up,getEG(names(results15.5_up),gse_annotation))
-results15.5_down <- cbind(results15.5_down,getEG(names(results15.5_down),gse_annotation))
+results_no_up <- cbind(results_no_up,getEG(names(results_no_up),gse_annotation))
+results_no_down <- cbind(results_no_down,getEG(names(results_no_down),gse_annotation))
+results_yes_up <- cbind(results_yes_up,getEG(names(results_yes_up),gse_annotation))
+results_yes_down <- cbind(results_yes_down,getEG(names(results_yes_down),gse_annotation))
 # 合并芯片检测标签
 results_up <- cbind(results_up,rownames(results_up))
 results_down <- cbind(results_down,rownames(results_down))
-results13.5_up <- cbind(results13.5_up,rownames(results13.5_up))
-results13.5_down <- cbind(results13.5_down,rownames(results13.5_down))
-results15.5_up <- cbind(results15.5_up,rownames(results15.5_up))
-results15.5_down <- cbind(results15.5_down,rownames(results15.5_down))
-
-# 剔除没有注释基因名称和基因id的行
-results_up <- results_up[!is.na(results_up[,1]) & !is.na(results_up[,2]),]
-results_down <- results_down[!is.na(results_down[,1]) & !is.na(results_down[,2]),]
-results13.5_up <- results13.5_up[!is.na(results13.5_up[,1]) & !is.na(results13.5_up[,2]),]
-results13.5_down <- results13.5_down[!is.na(results13.5_down[,1]) & !is.na(results13.5_down[,2]),]
-results15.5_up <- results15.5_up[!is.na(results15.5_up[,1]) & !is.na(results15.5_up[,2]),]
-results15.5_down <- results15.5_down[!is.na(results15.5_down[,1]) & !is.na(results15.5_down[,2]),]
+results_no_up <- cbind(results_no_up,rownames(results_no_up))
+results_no_down <- cbind(results_no_down,rownames(results_no_down))
+results_yes_up <- cbind(results_yes_up,rownames(results_yes_up))
+results_yes_down <- cbind(results_yes_down,rownames(results_yes_down))
 # 从矩阵转换为数据框
 d_up <- as.data.frame(results_up)
 d_down <- as.data.frame(results_down)
-d_13.5_up <- as.data.frame(results13.5_up)
-d_13.5_down <- as.data.frame(results13.5_down)
-d_15.5_up <- as.data.frame(results15.5_up)
-d_15.5_down <- as.data.frame(results15.5_down)
+d_no_up <- as.data.frame(results_no_up)
+d_no_down <- as.data.frame(results_no_down)
+d_yes_up <- as.data.frame(results_yes_up)
+d_yes_down <- as.data.frame(results_yes_down)
 # 添加列名
 colnames(d_up) <- c("Symbol","ID","Label")
 colnames(d_down) <- c("Symbol","ID","Label")
-colnames(d_13.5_up) <- c("Symbol","ID","Label")
-colnames(d_13.5_down) <- c("Symbol","ID","Label")
-colnames(d_15.5_up) <- c("Symbol","ID","Label")
-colnames(d_15.5_down) <- c("Symbol","ID","Label")
+colnames(d_no_up) <- c("Symbol","ID","Label")
+colnames(d_no_down) <- c("Symbol","ID","Label")
+colnames(d_yes_up) <- c("Symbol","ID","Label")
+colnames(d_yes_down) <- c("Symbol","ID","Label")
 # 提取表达平均值，F值，和F检验的p值
-d_temp_up <- fit2[rownames(d_up),] %>>% as.data.frame
-d_temp_down <- fit2[rownames(d_down),] %>>% as.data.frame
+d_temp_up <- fit3[rownames(d_up),] %>>% as.data.frame
+d_temp_down <- fit3[rownames(d_down),] %>>% as.data.frame
 d_temp_up <- d_temp_up[,c("Amean","F","F.p.value")]
 d_temp_down <- d_temp_down[,c("Amean","F","F.p.value")]
 
-d_13.5_temp_up <- fit2[rownames(d_13.5_up),] %>>% as.data.frame
-d_13.5_temp_down <- fit2[rownames(d_13.5_down),] %>>% as.data.frame
-d_13.5_temp_up <- d_13.5_temp_up[,c("Amean","F","F.p.value")]
-d_13.5_temp_down <- d_13.5_temp_down[,c("Amean","F","F.p.value")]
+d_no_temp_up <- fit3[rownames(d_no_up),] %>>% as.data.frame
+d_no_temp_down <- fit3[rownames(d_no_down),] %>>% as.data.frame
+d_no_temp_up <- d_no_temp_up[,c("Amean","F","F.p.value")]
+d_no_temp_down <- d_no_temp_down[,c("Amean","F","F.p.value")]
 
-d_15.5_temp_up <- fit2[rownames(d_15.5_up),] %>>% as.data.frame
-d_15.5_temp_down <- fit2[rownames(d_15.5_down),] %>>% as.data.frame
-d_15.5_temp_up <- d_15.5_temp_up[,c("Amean","F","F.p.value")]
-d_15.5_temp_down <- d_15.5_temp_down[,c("Amean","F","F.p.value")]
+d_yes_temp_up <- fit3[rownames(d_yes_up),] %>>% as.data.frame
+d_yes_temp_down <- fit3[rownames(d_yes_down),] %>>% as.data.frame
+d_yes_temp_up <- d_yes_temp_up[,c("Amean","F","F.p.value")]
+d_yes_temp_down <- d_yes_temp_down[,c("Amean","F","F.p.value")]
 # ===
 d_up <- cbind(d_up,d_temp_up)
 d_up <- d_up[order(d_up$F.p.value),]
 d_down <- cbind(d_down,d_temp_down)
 d_down <- d_down[order(d_down$F.p.value),]
 
-d_13.5_up <- cbind(d_13.5_up,d_13.5_temp_up)
-d_13.5_up <- d_13.5_up[order(d_13.5_up$F.p.value),]
-d_13.5_down <- cbind(d_13.5_down,d_13.5_temp_down)
-d_13.5_down <- d_13.5_down[order(d_13.5_down$F.p.value),]
+d_no_up <- cbind(d_no_up,d_no_temp_up)
+d_no_up <- d_no_up[order(d_no_up$F.p.value),]
+d_no_down <- cbind(d_no_down,d_no_temp_down)
+d_no_down <- d_no_down[order(d_no_down$F.p.value),]
 
-d_15.5_up <- cbind(d_15.5_up,d_15.5_temp_up)
-d_15.5_up <- d_15.5_up[order(d_15.5_up$F.p.value),]
-d_15.5_down <- cbind(d_15.5_down,d_15.5_temp_down)
-d_15.5_down <- d_15.5_down[order(d_15.5_down$F.p.value),]
+d_yes_up <- cbind(d_yes_up,d_yes_temp_up)
+d_yes_up <- d_yes_up[order(d_yes_up$F.p.value),]
+d_yes_down <- cbind(d_yes_down,d_yes_temp_down)
+d_yes_down <- d_yes_down[order(d_yes_down$F.p.value),]
 # 去掉上下调不确定的基因（包含了重复的symbol和id）
 d <- rbind(d_up[!(d_up$Symbol %in% d_down$Symbol),],
            d_down[!(d_down$Symbol %in% d_up$Symbol),])
 d <- d[order(d$F.p.value),]
-d_13.5 <- rbind(d_13.5_up[!(d_13.5_up$Symbol %in% d_13.5_down$Symbol),],
-                d_13.5_down[!(d_13.5_down$Symbol %in% d_13.5_up$Symbol),])
-d_13.5 <- d_13.5[order(d_13.5$F.p.value),]
-d_15.5 <- rbind(d_15.5_up[!(d_15.5_up$Symbol %in% d_15.5_down$Symbol),],
-                d_15.5_down[!(d_15.5_down$Symbol %in% d_15.5_up$Symbol),])
-d_15.5 <- d_15.5[order(d_15.5$F.p.value),]
+d_no <- rbind(d_no_up[!(d_no_up$Symbol %in% d_no_down$Symbol),],
+                d_no_down[!(d_no_down$Symbol %in% d_no_up$Symbol),])
+d_no <- d_no[order(d_no$F.p.value),]
+d_yes <- rbind(d_yes_up[!(d_yes_up$Symbol %in% d_yes_down$Symbol),],
+                d_yes_down[!(d_yes_down$Symbol %in% d_yes_up$Symbol),])
+d_yes <- d_yes[order(d_yes$F.p.value),]
 
 # 热图
 
 library(pheatmap)
-# 13.5天和15.5天共有差异表达基因热图
-selected <- gse_eset[rownames(d),]
-rownames(selected) <- d$Symbol
+# patient_with_recurrent_events相对于与patient_without_recurrent_events差异表达基因热图
+dif <- d_yes[!(d_yes$Symbol %in% d$Symbol),]
+selected <- gse_eset[rownames(dif),]
+rownames(selected) <- dif$Symbol
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
-# 13.5天基因差异表达热图
-selected <- gse_eset[rownames(d_13.5),
-                     c("GSM795342","GSM795343","GSM795344","GSM795345","GSM795346","GSM795347")]
-rownames(selected) <- d_13.5$Symbol
+# patient_without_recurrent_events基因差异表达热图
+no_id <- gse_sample[gse_sample$Group == "no" & gse_sample$Condition == "Disease",]$SampleID %>>% 
+  (sub("_Nel0101(.*)","",.))
+selected <- gse_eset[rownames(d_no),no_id]
+rownames(selected) <- d_no$Symbol
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
-# 15.5天基因差异表达热图
-selected <- gse_eset[rownames(d_15.5),
-                     c("GSM795348","GSM795349","GSM795350","GSM795351","GSM795352","GSM795353")]
-rownames(selected) <- d_15.5$Symbol
+# patient_with_recurrent_events基因差异表达热图
+yes_id <- gse_sample[gse_sample$Group == "yes" & gse_sample$Condition == "Disease",]$SampleID %>>% 
+  (sub("_Nel0101(.*)","",.))
+selected <- gse_eset[rownames(d_yes),yes_id]
+rownames(selected) <- d_yes$Symbol
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
 
 # 统计分析及可视化
@@ -239,28 +199,35 @@ pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_c
 # 换成clusterProfiler包，出柱状图
 library(clusterProfiler)
 library(DOSE)
-ego_up <- enrichGO(gene=unique(as.character(d_up$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
-ego_down <- enrichGO(gene=unique(as.character(d_down$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
+# 不复发和复发共有相对对照表达差异显著基因，基因太少无法进行通路分析
+ego_up <- enrichGO(gene=unique(as.character(d_up$ID)),organism="human",ont="BP",readable=T)
+ego_down <- enrichGO(gene=unique(as.character(d_down$ID)),organism="human",ont="BP",readable=T)
 plot(ego_up)
 plot(ego_down)
 temp <- d_up$Amean
 names(temp) <- d_up$ID
 cnetplot(ego_up,fixed=F,categorySize="pvalue",foldChange=temp)
-# 13.5 cnet图太大太复杂
-ego_13.5_up <- enrichGO(gene=unique(as.character(d_13.5_up$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
-ego_13.5_down <- enrichGO(gene=unique(as.character(d_13.5_down$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
-plot(ego_13.5_up)
-plot(ego_13.5_down)
-# 15.5 cnet图太大太复杂
-ego_15.5_up <- enrichGO(gene=unique(as.character(d_15.5_up$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
-ego_15.5_down <- enrichGO(gene=unique(as.character(d_15.5_down$ID)),organism="mouse",ont="BP",pvalueCutoff=0.05,pAdjustMethod="none",readable=T)
-plot(ego_15.5_up)
-plot(ego_15.5_down)
+# 不复发相对对照表达差异显著基因
+ego_no_up <- enrichGO(gene=unique(as.character(d_no_up$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
+ego_no_down <- enrichGO(gene=unique(as.character(d_no_down$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
+plot(ego_no_up)
+plot(ego_no_down)
+# 复发相对对照表达差异显著基因
+ego_yes_up <- enrichGO(gene=unique(as.character(d_yes_up$ID)),organism="human",ont="BP",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
+ego_yes_down <- enrichGO(gene=unique(as.character(d_yes_down$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
+plot(ego_yes_up)
+plot(ego_yes_down)
+
+dd_yes <- rbind(d_yes_up,d_yes_down)
+ego_yes <- enrichGO(gene=unique(as.character(dd_yes$ID)),organism="human",ont="BP",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=5,readable=T)
+plot(ego_yes)
+cnetplot(ego_yes,fixed=F,categorySize="pvalue")
 
 # 分别对上调和下调的基因进行KEGG分析
 # 由于KEGG缺乏维护，现在开始流行Reactome分析。不过ReactomePA和clusterProfiler包分析enrichPathway和enrichKEGG结果数量明显少于GeneAnswers包，还有赖于未来的项目验证。
-ekg_up <- enrichKEGG(gene=unique(as.character(d_up$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-ekg_down <- enrichKEGG(gene=unique(as.character(d_down$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
+# 共有基因太少无法进行通路分析
+ekg_up <- enrichKEGG(gene=unique(as.character(d_up$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
+ekg_down <- enrichKEGG(gene=unique(as.character(d_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
 temp <- d_up$Amean
 names(temp) <- d_up$ID
 cnetplot(ekg_up,fixed=F,categorySize="pvalue",foldChange=temp)
@@ -268,27 +235,27 @@ temp <- -d_down$Amean
 names(temp) <- d_down$ID
 cnetplot(ekg_down,fixed=F,categorySize="pvalue",foldChange=temp)
 
-ekg_13.5_up <- enrichKEGG(gene=unique(as.character(d_13.5_up$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-ekg_13.5_down <- enrichKEGG(gene=unique(as.character(d_13.5_down$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-temp <- d_13.5_up$Amean
-names(temp) <- d_13.5_up$ID
-cnetplot(ekg_13.5_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_13.5_down$Amean
-names(temp) <- d_13.5_down$ID
-cnetplot(ekg_13.5_down,fixed=F,categorySize="pvalue",foldChange=temp)
+ekg_no_up <- enrichKEGG(gene=unique(as.character(d_no_up$ID)),organism="human",pvalueCutoff=0.05,minGSSize=1,qvalueCutoff=0.2,readable=T)
+ekg_no_down <- enrichKEGG(gene=unique(as.character(d_no_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
+temp <- d_no_up$Amean
+names(temp) <- d_no_up$ID
+cnetplot(ekg_no_up,fixed=F,categorySize="pvalue",foldChange=temp)
+temp <- -d_no_down$Amean
+names(temp) <- d_no_down$ID
+cnetplot(ekg_no_down,fixed=F,categorySize="pvalue",foldChange=temp)
 
-ekg_15.5_up <- enrichKEGG(gene=unique(as.character(d_15.5_up$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-ekg_15.5_down <- enrichKEGG(gene=unique(as.character(d_15.5_down$ID)),organism="mouse",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-temp <- d_15.5_up$Amean
-names(temp) <- d_15.5_up$ID
-cnetplot(ekg_15.5_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_15.5_down$Amean
-names(temp) <- d_15.5_down$ID
-cnetplot(ekg_15.5_down,fixed=F,categorySize="pvalue",foldChange=temp)
+ekg_yes_up <- enrichKEGG(gene=unique(as.character(d_yes_up$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
+ekg_yes_down <- enrichKEGG(gene=unique(as.character(d_yes_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
+temp <- d_yes_up$Amean
+names(temp) <- d_yes_up$ID
+cnetplot(ekg_yes_up,fixed=F,categorySize="pvalue",foldChange=temp)
+temp <- -d_yes_down$Amean
+names(temp) <- d_yes_down$ID
+cnetplot(ekg_yes_down,fixed=F,categorySize="pvalue",foldChange=temp)
 
 library(ReactomePA)
-epa_up <- enrichPathway(gene=unique(as.character(d_up$ID)),organism="mouse",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-epa_down <- enrichPathway(gene=unique(as.character(d_down$ID)),organism="mouse",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
+epa_up <- enrichPathway(gene=unique(as.character(d_up$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
+epa_down <- enrichPathway(gene=unique(as.character(d_down$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
 temp <- d_up$Amean
 names(temp) <- d_up$ID
 cnetplot(epa_up,fixed=F,categorySize="pvalue",foldChange=temp)
@@ -296,20 +263,20 @@ temp <- -d_down$Amean
 names(temp) <- d_down$ID
 cnetplot(epa_down,fixed=F,categorySize="pvalue",foldChange=temp)
 
-epa_13.5_up <- enrichPathway(gene=unique(as.character(d_13.5_up$ID)),organism="mouse",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-epa_13.5_down <- enrichPathway(gene=unique(as.character(d_13.5_down$ID)),organism="mouse",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-temp <- d_13.5_up$Amean
-names(temp) <- d_13.5_up$ID
-cnetplot(epa_13.5_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_13.5_down$Amean
-names(temp) <- d_13.5_down$ID
-cnetplot(epa_13.5_down,fixed=F,categorySize="pvalue",foldChange=temp)
+epa_no_up <- enrichPathway(gene=unique(as.character(d_no_up$ID)),organism="human",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=1,readable=T)
+epa_no_down <- enrichPathway(gene=unique(as.character(d_no_down$ID)),organism="human",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=1,readable=T)
+temp <- d_no_up$Amean
+names(temp) <- d_no_up$ID
+cnetplot(epa_no_up,fixed=F,categorySize="pvalue",foldChange=temp)
+temp <- -d_no_down$Amean
+names(temp) <- d_no_down$ID
+cnetplot(epa_no_down,fixed=F,categorySize="pvalue",foldChange=temp)
 
-epa_15.5_up <- enrichPathway(gene=unique(as.character(d_15.5_up$ID)),organism="mouse",readable=T)
-epa_15.5_down <- enrichPathway(gene=unique(as.character(d_15.5_down$ID)),organism="mouse",readable=T)
-temp <- d_15.5_up$Amean
-names(temp) <- d_15.5_up$ID
-cnetplot(epa_15.5_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_15.5_down$Amean
-names(temp) <- d_15.5_down$ID
-cnetplot(epa_15.5_down,fixed=F,categorySize="pvalue",foldChange=temp)
+epa_yes_up <- enrichPathway(gene=unique(as.character(d_yes_up$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
+epa_yes_down <- enrichPathway(gene=unique(as.character(d_yes_down$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
+temp <- d_yes_up$Amean
+names(temp) <- d_yes_up$ID
+cnetplot(epa_yes_up,fixed=F,categorySize="pvalue",foldChange=temp)
+temp <- -d_yes_down$Amean
+names(temp) <- d_yes_down$ID
+cnetplot(epa_yes_down,fixed=F,categorySize="pvalue",foldChange=temp)
