@@ -77,10 +77,10 @@ fit2 <- contrasts.fit(fit,cont.matrix)
 fit3 <- eBayes(fit2)
 # F p-value选取，可以使用global或者nestedF，或者使用另外更加保守的方法不依赖数据的分布情况
 # results <- decideTests(fit3,method="global")
-results <- decideTests(fit3,method="nestedF")
-# grep("AFFX",featureNames(gse_rma)) %>>% (summary(fit3$F.p.value[.]))
-# # Min=0.0000010，因此p.value取0.000001
-# results <- classifyTestsF(fit3,p.value=0.000001)
+# results <- decideTests(fit3,method="nestedF")
+grep("AFFX",featureNames(gse_rma)) %>>% (summary(fit3$F.p.value[.]))
+# Min=0.0000010，因此p.value取0.01
+results <- classifyTestsF(fit3,p.value=0.01)
 # 各分组上下调检测数
 summary(results)
 # 分组间上下调检测交叉数
@@ -173,25 +173,25 @@ d_yes <- rbind(d_yes_up[!(d_yes_up$Symbol %in% d_yes_down$Symbol),],
                 d_yes_down[!(d_yes_down$Symbol %in% d_yes_up$Symbol),])
 d_yes <- d_yes[order(d_yes$F.p.value),]
 
+# 输出为EXCEL
+library(XLConnect)
+
 # 热图
 
 library(pheatmap)
 # patient_with_recurrent_events相对于与patient_without_recurrent_events差异表达基因热图
 dif <- d_yes[!(d_yes$Symbol %in% d$Symbol),]
+dif_up <- d_yes_up[!(d_yes_up$Symbol %in% d$Symbol),]
+dif_up <- dif_up[dif_up$Symbol != "OSGIN2",] #排除上下调重复的
+dif_down <- d_yes_down[!(d_yes_down$Symbol %in% d$Symbol),]
+dif_down <- dif_down[dif_down$Symbol != "OSGIN2",]
+
+writeWorksheetToFile("../dif.xlsx",data=dif,sheet="Sheet1",startRow=1,startCol=1)
+writeWorksheetToFile("../dif_up.xlsx",data=dif_up,sheet="Sheet1",startRow=1,startCol=1)
+writeWorksheetToFile("../dif_down.xlsx",data=dif_down,sheet="Sheet1",startRow=1,startCol=1)
+
 selected <- gse_eset[rownames(dif),]
-rownames(selected) <- dif$Symbol
-pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
-# patient_without_recurrent_events基因差异表达热图
-no_id <- gse_sample[gse_sample$Group == "no" & gse_sample$Condition == "Disease",]$SampleID %>>% 
-  (sub("_Nel0101(.*)","",.))
-selected <- gse_eset[rownames(d_no),no_id]
-rownames(selected) <- d_no$Symbol
-pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
-# patient_with_recurrent_events基因差异表达热图
-yes_id <- gse_sample[gse_sample$Group == "yes" & gse_sample$Condition == "Disease",]$SampleID %>>% 
-  (sub("_Nel0101(.*)","",.))
-selected <- gse_eset[rownames(d_yes),yes_id]
-rownames(selected) <- d_yes$Symbol
+rownames(selected) <- NULL
 pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
 
 # 统计分析及可视化
@@ -199,84 +199,65 @@ pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_c
 # 换成clusterProfiler包，出柱状图
 library(clusterProfiler)
 library(DOSE)
-# 不复发和复发共有相对对照表达差异显著基因，基因太少无法进行通路分析
-ego_up <- enrichGO(gene=unique(as.character(d_up$ID)),organism="human",ont="BP",readable=T)
-ego_down <- enrichGO(gene=unique(as.character(d_down$ID)),organism="human",ont="BP",readable=T)
-plot(ego_up)
-plot(ego_down)
-temp <- d_up$Amean
-names(temp) <- d_up$ID
-cnetplot(ego_up,fixed=F,categorySize="pvalue",foldChange=temp)
-# 不复发相对对照表达差异显著基因
-ego_no_up <- enrichGO(gene=unique(as.character(d_no_up$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
-ego_no_down <- enrichGO(gene=unique(as.character(d_no_down$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
-plot(ego_no_up)
-plot(ego_no_down)
-# 复发相对对照表达差异显著基因
-ego_yes_up <- enrichGO(gene=unique(as.character(d_yes_up$ID)),organism="human",ont="BP",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-ego_yes_down <- enrichGO(gene=unique(as.character(d_yes_down$ID)),organism="human",ont="BP",minGSSize=1,readable=T)
-plot(ego_yes_up)
-plot(ego_yes_down)
 
-dd_yes <- rbind(d_yes_up,d_yes_down)
-ego_yes <- enrichGO(gene=unique(as.character(dd_yes$ID)),organism="human",ont="BP",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=5,readable=T)
-plot(ego_yes)
-cnetplot(ego_yes,fixed=F,categorySize="pvalue")
+# 复发较未复发相对对照表达差异显著基因GO分析
+ego_dif <- enrichGO(gene=unique(as.character(dif$ID)),organism="human",ont="BP",readable=T)
+ego_dif_up <- enrichGO(gene=unique(as.character(dif_up$ID)),organism="human",ont="BP",readable=T)
+ego_dif_down <- enrichGO(gene=unique(as.character(dif_down$ID)),organism="human",ont="BP",readable=T)
+plot(ego_dif)
+plot(ego_dif_up)
+plot(ego_dif_down)
+summary(ego_dif) %>>% 
+  (writeWorksheetToFile("../ego_dif.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_dif_up) %>>%
+  (writeWorksheetToFile("../ego_dif_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_dif_down) %>>%
+  (writeWorksheetToFile("../ego_dif_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
 
-# 分别对上调和下调的基因进行KEGG分析
-# 由于KEGG缺乏维护，现在开始流行Reactome分析。不过ReactomePA和clusterProfiler包分析enrichPathway和enrichKEGG结果数量明显少于GeneAnswers包，还有赖于未来的项目验证。
-# 共有基因太少无法进行通路分析
-ekg_up <- enrichKEGG(gene=unique(as.character(d_up$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-ekg_down <- enrichKEGG(gene=unique(as.character(d_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-temp <- d_up$Amean
-names(temp) <- d_up$ID
-cnetplot(ekg_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_down$Amean
-names(temp) <- d_down$ID
-cnetplot(ekg_down,fixed=F,categorySize="pvalue",foldChange=temp)
+cnetplot(ego_dif,fixed=F,categorySize="pvalue")
+cnetplot(ego_dif_up,fixed=F,categorySize="pvalue")
+cnetplot(ego_dif_down,fixed=F,categorySize="pvalue")
 
-ekg_no_up <- enrichKEGG(gene=unique(as.character(d_no_up$ID)),organism="human",pvalueCutoff=0.05,minGSSize=1,qvalueCutoff=0.2,readable=T)
-ekg_no_down <- enrichKEGG(gene=unique(as.character(d_no_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-temp <- d_no_up$Amean
-names(temp) <- d_no_up$ID
-cnetplot(ekg_no_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_no_down$Amean
-names(temp) <- d_no_down$ID
-cnetplot(ekg_no_down,fixed=F,categorySize="pvalue",foldChange=temp)
+# KEGG和Reactome分析
+# 有问题
+# t <- topTable(fit3,coef="patient_with_recurrent_events",number=4100)
+# fold <- t[rownames(t) %in% rownames(dif),"logFC"]
+# names(fold) <- rownames(t[rownames(t) %in% rownames(dif),])
+# names(fold) <- getEG(names(fold),gse_annotation)
+fold_up <- fold[fold > 0]
+fold_down <- fold[fold < 0]
 
-ekg_yes_up <- enrichKEGG(gene=unique(as.character(d_yes_up$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-ekg_yes_down <- enrichKEGG(gene=unique(as.character(d_yes_down$ID)),organism="human",pvalueCutoff=1,minGSSize=1,qvalueCutoff=1,readable=T)
-temp <- d_yes_up$Amean
-names(temp) <- d_yes_up$ID
-cnetplot(ekg_yes_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_yes_down$Amean
-names(temp) <- d_yes_down$ID
-cnetplot(ekg_yes_down,fixed=F,categorySize="pvalue",foldChange=temp)
+ekg_dif <- enrichKEGG(gene=unique(as.character(dif$ID)),organism="human",readable=T)
+ekg_dif_up <- enrichKEGG(gene=unique(as.character(dif_up$ID)),organism="human",readable=T,minGSSize=2)
+ekg_dif_down <- enrichKEGG(gene=unique(as.character(dif_down$ID)),organism="human",readable=T)
+plot(ekg_dif)
+plot(ekg_dif_up)
+plot(ekg_dif_down)
+summary(ekg_dif) %>>%
+  (writeWorksheetToFile("../ekg_dif.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ekg_dif_up) %>>%
+  (writeWorksheetToFile("../ekg_dif_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ekg_dif_down) %>>%
+  (writeWorksheetToFile("../ekg_dif_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+
+cnetplot(ekg_dif,fixed=F,categorySize="pvalue",foldChange=fold)
+cnetplot(ekg_dif_up,fixed=F,categorySize="pvalue",foldChange=fold_up)
+cnetplot(ekg_dif_down,fixed=F,categorySize="pvalue",foldChange=fold_down)
 
 library(ReactomePA)
-epa_up <- enrichPathway(gene=unique(as.character(d_up$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-epa_down <- enrichPathway(gene=unique(as.character(d_down$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-temp <- d_up$Amean
-names(temp) <- d_up$ID
-cnetplot(epa_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_down$Amean
-names(temp) <- d_down$ID
-cnetplot(epa_down,fixed=F,categorySize="pvalue",foldChange=temp)
+epa_dif <- enrichPathway(gene=unique(as.character(dif$ID)),organism="human",readable=T,pAdjustMethod="none")
+epa_dif_up <- enrichPathway(gene=unique(as.character(dif_up$ID)),organism="human",readable=T,pAdjustMethod="none")
+epa_dif_down <- enrichPathway(gene=unique(as.character(dif_down$ID)),organism="human",readable=T,pAdjustMethod="none")
+plot(epa_dif)
+plot(epa_dif_up)
+plot(epa_dif_down)
+summary(epa_dif) %>>%
+  (writeWorksheetToFile("../epa_dif.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(epa_dif_up) %>>%
+  (writeWorksheetToFile("../epa_dif_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(epa_dif_down) %>>%
+  (writeWorksheetToFile("../epa_dif_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
 
-epa_no_up <- enrichPathway(gene=unique(as.character(d_no_up$ID)),organism="human",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=1,readable=T)
-epa_no_down <- enrichPathway(gene=unique(as.character(d_no_down$ID)),organism="human",pvalueCutoff=0.05,qvalueCutoff=0.2,minGSSize=1,readable=T)
-temp <- d_no_up$Amean
-names(temp) <- d_no_up$ID
-cnetplot(epa_no_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_no_down$Amean
-names(temp) <- d_no_down$ID
-cnetplot(epa_no_down,fixed=F,categorySize="pvalue",foldChange=temp)
-
-epa_yes_up <- enrichPathway(gene=unique(as.character(d_yes_up$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-epa_yes_down <- enrichPathway(gene=unique(as.character(d_yes_down$ID)),organism="human",pvalueCutoff=1,qvalueCutoff=1,minGSSize=1,readable=T)
-temp <- d_yes_up$Amean
-names(temp) <- d_yes_up$ID
-cnetplot(epa_yes_up,fixed=F,categorySize="pvalue",foldChange=temp)
-temp <- -d_yes_down$Amean
-names(temp) <- d_yes_down$ID
-cnetplot(epa_yes_down,fixed=F,categorySize="pvalue",foldChange=temp)
+cnetplot(epa_dif,fixed=F,categorySize="pvalue",foldChange=fold)
+cnetplot(epa_dif_up,fixed=F,categorySize="pvalue",foldChange=fold_up)
+cnetplot(epa_dif_down,fixed=F,categorySize="pvalue",foldChange=fold_down)
