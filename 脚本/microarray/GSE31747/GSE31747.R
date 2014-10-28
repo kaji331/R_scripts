@@ -154,6 +154,75 @@ d_6hr <- rbind(d_6hr_up[!(d_6hr_up$Symbol %in% d_6hr_down$Symbol),],
                d_6hr_down[!(d_6hr_down$Symbol %in% d_6hr_up$Symbol),])
 d_6hr <- d_6hr[order(d_6hr$F.p.value),]
 
+# 整理去掉重复值
+duplicated(d_1hr$Symbol) %>>% (d_1hr[.,])
+duplicated(d_6hr$Symbol) %>>% (d_6hr[.,])
+# 1hr中TNF重复，6hr中IL1B重复
+d_1hr <- d_1hr[d_1hr$Label != "259_s_at",]
+d_1hr_up <- d_1hr_up[d_1hr_up$Label != "259_s_at",]
+d_6hr <- d_6hr[d_6hr$Label != "39402_at",]
+d_6hr_up <- d_6hr_up[d_6hr_up$Label != "39402_at",]
+
 # 输出为EXCEL
 library(XLConnect)
 
+# 热图
+
+library(pheatmap)
+# 感染1hr和6hr共有差异表达基因热图
+selected <- gse_eset[rownames(d),]
+rownames(selected) <- d$Symbol
+pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
+# 感染1hr差异表达基因热图
+selected <- gse_eset[rownames(d_1hr),]
+rownames(selected) <- d_1hr$Symbol
+pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
+# 感染6hr差异表达基因热图
+selected <- gse_eset[rownames(d_6hr),]
+rownames(selected) <- d_6hr$Symbol
+pheatmap(selected,color=colorRampPalette(c("green","black","red"))(100),border_color=NA)
+
+# 统计分析及可视化
+
+# 添加logFC值
+t <- topTable(fit3,coef=c("Ebola_infected_1hr","Ebola_infected_6hr"),number=100)
+fold_d <- t[rownames(t) %in% rownames(d),c("Ebola_infected_1hr","Ebola_infected_6hr")]
+rownames(fold_d) <- getEG(rownames(fold_d),gse_annotation)
+fold_d <- apply(fold_d,1,mean)
+
+fold_d_1hr <- t[rownames(t) %in% rownames(d_1hr),c("Ebola_infected_1hr","Ebola_infected_6hr")]
+rownames(fold_d_1hr) <- getEG(rownames(fold_d_1hr),gse_annotation)
+fold_d_1hr <- apply(fold_d_1hr,1,mean)
+
+fold_d_6hr <- t[rownames(t) %in% rownames(d_6hr),c("Ebola_infected_1hr","Ebola_infected_6hr")]
+rownames(fold_d_6hr) <- getEG(rownames(fold_d_6hr),gse_annotation)
+fold_d_6hr <- apply(fold_d_6hr,1,mean)
+
+
+library(clusterProfiler)
+library(DOSE)
+# 感染1hr和6hr共有差异表达基因GO分析
+ego_up <- enrichGO(gene=unique(as.character(d_up$ID)),organism="human",ont="BP",readable=T)
+ego_down <- enrichGO(gene=unique(as.character(d_down$ID)),organism="human",ont="BP",readable=T,
+                     minGSSize=1)
+cnetplot(ego_up,fixed=F,categorySize="pvalue",foldChange=fold_d)
+cnetplot(ego_down,fixed=F,categorySize="pvalue",foldChange=fold_d)
+# 感染1hr差异表达基因GO分析
+ego_1hr_up <- enrichGO(gene=unique(as.character(d_1hr_up$ID)),organism="human",ont="BP",readable=T)
+ego_1hr_down <- enrichGO(gene=unique(as.character(d_1hr_down$ID)),organism="human",ont="BP",readable=T)
+cnetplot(ego_1hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+cnetplot(ego_1hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+# 感染6hr差异表达基因GO分析
+ego_6hr_up <- enrichGO(gene=unique(as.character(d_6hr_up$ID)),organism="human",ont="BP",readable=T)
+ego_6hr_down <- enrichGO(gene=unique(as.character(d_6hr_down$ID)),organism="human",ont="BP",readable=T,
+                         pvalueCutoff=0.05,pAdjustMethod="none",qvalueCutoff=1,minGSSize=3)
+cnetplot(ego_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
+cnetplot(ego_6hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
+
+# 分别对上调和下调的基因进行KEGG分析
+# 由于KEGG缺乏维护，现在开始流行Reactome分析。
+ekg_up <- enrichKEGG(gene=unique(as.character(d_up$ID)),organism="human",readable=T,
+                     pAdjustMethod="none",minGSSize=1)
+# ekg_down <- enrichKEGG(gene=unique(as.character(d_down$ID)),organism="human",readable=T,
+#                        pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
+cnetplot(ekg_up,fixed=F,categorySize="pvalue",foldChange=fold_d)
