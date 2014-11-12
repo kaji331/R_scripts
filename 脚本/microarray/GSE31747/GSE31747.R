@@ -221,8 +221,43 @@ cnetplot(ego_6hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
 
 # 分别对上调和下调的基因进行KEGG分析
 # 由于KEGG缺乏维护，现在开始流行Reactome分析。
+# 感染1hr和6hr共有差异表达基因KEGG分析
 ekg_up <- enrichKEGG(gene=unique(as.character(d_up$ID)),organism="human",readable=T,
                      pAdjustMethod="none",minGSSize=1)
 # ekg_down <- enrichKEGG(gene=unique(as.character(d_down$ID)),organism="human",readable=T,
 #                        pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
 cnetplot(ekg_up,fixed=F,categorySize="pvalue",foldChange=fold_d)
+# 感染1hr差异表达基因KEGG分析
+ekg_1hr_up <- enrichKEGG(gene=unique(as.character(d_1hr_up$ID)),organism="human",readable=T,
+                         pAdjustMethod="none",minGSSize=1)
+ekg_1hr_down <- enrichKEGG(gene=unique(as.character(d_1hr_down$ID)),organism="human",readable=T,
+                           pAdjustMethod="none",minGSSize=1)
+cnetplot(ekg_1hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+cnetplot(ekg_1hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+# 感染6hr差异表达基因KEGG分析
+ekg_6hr_up <- enrichKEGG(gene=unique(as.character(d_6hr_up$ID)),organism="human",readable=T,
+                         pAdjustMethod="none",minGSSize=1)
+# ekg_6hr_down <- enrichKEGG(gene=unique(as.character(d_6hr_down$ID)),organism="human",readable=T,
+#                            pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
+cnetplot(ekg_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
+
+library(ReactomePA)
+# 感染1hr和6hr共有差异表达基因Reactome分析
+epa_up <- enrichPathway(gene=unique(as.character(d_up$ID)),organism="human",readable=T,
+                        pAdjustMethod="none",minGSSize=1)
+# epa_down <- enrichPathway(gene=unique(as.character(d_down$ID)),organism="human",readable=T,
+#                           pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
+cnetplot(epa_up,fixed=F,categorySize="pvalue",foldChange=fold_d)
+# 感染1hr差异表达基因Reactome分析
+epa_1hr_up <- enrichPathway(gene=unique(as.character(d_1hr_up$ID)),organism="human",readable=T,
+                            pAdjustMethod="none",minGSSize=1)
+epa_1hr_down <- enrichPathway(gene=unique(as.character(d_1hr_down$ID)),organism="human",readable=T,
+                              pAdjustMethod="none",minGSSize=1)
+cnetplot(epa_1hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+cnetplot(epa_1hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+# 感染6hr差异表达基因Reactome分析
+epa_6hr_up <- enrichPathway(gene=unique(as.character(d_6hr_up$ID)),organism="human",readable=T,
+                            pAdjustMethod="none",minGSSize=1)
+# epa_6hr_down <- enrichPathway(gene=unique(as.character(d_6hr_down$ID)),organism="human",readable=T,
+#                               pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
+cnetplot(epa_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
