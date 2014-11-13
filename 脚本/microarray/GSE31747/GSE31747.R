@@ -165,6 +165,9 @@ d_6hr_up <- d_6hr_up[d_6hr_up$Label != "39402_at",]
 
 # 输出为EXCEL
 library(XLConnect)
+writeWorksheetToFile("../dif.xlsx",data=d,sheet="Sheet1",startRow=1,startCol=1)
+writeWorksheetToFile("../dif_1hr.xlsx",data=d_1hr,sheet="Sheet1",startRow=1,startCol=1)
+writeWorksheetToFile("../dif_6hr.xlsx",data=d_6hr,sheet="Sheet1",startRow=1,startCol=1)
 
 # 热图
 
@@ -219,6 +222,19 @@ ego_6hr_down <- enrichGO(gene=unique(as.character(d_6hr_down$ID)),organism="huma
 cnetplot(ego_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
 cnetplot(ego_6hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
 
+summary(ego_up) %>>% 
+  (writeWorksheetToFile("../ego_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_down) %>>% 
+  (writeWorksheetToFile("../ego_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_1hr_up) %>>% 
+  (writeWorksheetToFile("../ego_1hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_1hr_down) %>>% 
+  (writeWorksheetToFile("../ego_1hr_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_6hr_up) %>>% 
+  (writeWorksheetToFile("../ego_6hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ego_6hr_down) %>>% 
+  (writeWorksheetToFile("../ego_6hr_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+
 # 分别对上调和下调的基因进行KEGG分析
 # 由于KEGG缺乏维护，现在开始流行Reactome分析。
 # 感染1hr和6hr共有差异表达基因KEGG分析
@@ -241,6 +257,15 @@ ekg_6hr_up <- enrichKEGG(gene=unique(as.character(d_6hr_up$ID)),organism="human"
 #                            pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
 cnetplot(ekg_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
 
+summary(ekg_up) %>>% 
+  (writeWorksheetToFile("../ekg_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ekg_1hr_up) %>>% 
+  (writeWorksheetToFile("../ekg_1hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ekg_1hr_down) %>>% 
+  (writeWorksheetToFile("../ekg_1hr_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(ekg_6hr_up) %>>% 
+  (writeWorksheetToFile("../ekg_6hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+
 library(ReactomePA)
 # 感染1hr和6hr共有差异表达基因Reactome分析
 epa_up <- enrichPathway(gene=unique(as.character(d_up$ID)),organism="human",readable=T,
@@ -261,3 +286,12 @@ epa_6hr_up <- enrichPathway(gene=unique(as.character(d_6hr_up$ID)),organism="hum
 # epa_6hr_down <- enrichPathway(gene=unique(as.character(d_6hr_down$ID)),organism="human",readable=T,
 #                               pAdjustMethod="none",minGSSize=1,qvalueCutoff=1,pvalueCutoff=1)
 cnetplot(epa_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
+
+summary(epa_up) %>>% 
+  (writeWorksheetToFile("../epa_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(epa_1hr_up) %>>% 
+  (writeWorksheetToFile("../epa_1hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(epa_1hr_down) %>>% 
+  (writeWorksheetToFile("../epa_1hr_down.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
+summary(epa_6hr_up) %>>% 
+  (writeWorksheetToFile("../epa_6hr_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
