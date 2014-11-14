@@ -210,17 +210,21 @@ ego_down <- enrichGO(gene=unique(as.character(d_down$ID)),organism="human",ont="
                      minGSSize=1)
 cnetplot(ego_up,fixed=F,categorySize="pvalue",foldChange=fold_d)
 cnetplot(ego_down,fixed=F,categorySize="pvalue",foldChange=fold_d)
+barplot(ego_up)
 # 感染1hr差异表达基因GO分析
 ego_1hr_up <- enrichGO(gene=unique(as.character(d_1hr_up$ID)),organism="human",ont="BP",readable=T)
 ego_1hr_down <- enrichGO(gene=unique(as.character(d_1hr_down$ID)),organism="human",ont="BP",readable=T)
 cnetplot(ego_1hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
 cnetplot(ego_1hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_1hr)
+barplot(ego_1hr_up)
 # 感染6hr差异表达基因GO分析
 ego_6hr_up <- enrichGO(gene=unique(as.character(d_6hr_up$ID)),organism="human",ont="BP",readable=T)
 ego_6hr_down <- enrichGO(gene=unique(as.character(d_6hr_down$ID)),organism="human",ont="BP",readable=T,
                          pvalueCutoff=0.05,pAdjustMethod="none",qvalueCutoff=1,minGSSize=3)
 cnetplot(ego_6hr_up,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
 cnetplot(ego_6hr_down,fixed=F,categorySize="pvalue",foldChange=fold_d_6hr)
+barplot(ego_6hr_up)
+barplot(ego_6hr_down)
 
 summary(ego_up) %>>% 
   (writeWorksheetToFile("../ego_up.xlsx",data=.,sheet="Sheet1",startRow=1,startCol=1))
