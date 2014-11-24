@@ -55,7 +55,7 @@ for (i in 1:2)
   lines(x.cord[i,],y.cord[i,])
 
 #画星星
-x.text <- colMeans(p$xvals[,1:2])
-y.text <- apply(p$CI[2,1:2,],2,max)+3
+x.text <- colMeans(as.matrix(p$xvals[1,1:2])) ##1决定哪些分组需要画星星
+y.text <- apply(as.matrix(p$CI[2,1:2,1]),2,max)+3 ##1决定哪些分组需要画星星
 text("**",x=x.text,y=y.text)
 ```
