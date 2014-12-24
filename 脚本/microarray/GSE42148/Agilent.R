@@ -82,6 +82,21 @@ tT <- tT[!(regexpr("^NP[0-9]{4}",tT$GeneName) == 1),]
 tT_up <- tT[tT$logFC > 0,]
 tT_down <- tT[tT$logFC < 0,]
 
+
+# 火山图
+t <- topTable(fit2, number=99999)
+t <- subset(t, select=c("ID","adj.P.Val","P.Value","t","B","logFC","GeneName"))
+t <- t[!is.na(t$GeneName),]
+color <- rep("lightblue",62972)
+t <- cbind(t,color)
+t$color <- as.character(t$color)
+t[t$logFC > 1 & -log10(t$P.Value) > 2,]$color <- "red"
+t[t$logFC < -1 & -log10(t$P.Value) > 2,]$color <- "green"
+plot(t$logFC,-log10(t$P.Value),col=t$color,pch=20)
+abline(h=2) # p<0.01，若p<0.05则h=1.30103
+abline(v=1)
+abline(v=-1)
+
 # 热图
 library(pheatmap)
 selected <- ex[rownames(tT),]
