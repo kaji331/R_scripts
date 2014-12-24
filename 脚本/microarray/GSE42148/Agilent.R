@@ -90,6 +90,10 @@ t <- t[!is.na(t$GeneName),]
 color <- rep("lightblue",62972)
 t <- cbind(t,color)
 t$color <- as.character(t$color)
+# 抽样示意，以加快绘图速度
+# set.seed(1984)
+# a <- sample(t$GeneName,3000)
+# t <- t[t$GeneName[a],]
 t[t$logFC > 1 & -log10(t$P.Value) > 2,]$color <- "red"
 t[t$logFC < -1 & -log10(t$P.Value) > 2,]$color <- "green"
 plot(t$logFC,-log10(t$P.Value),col=t$color,pch=20)
