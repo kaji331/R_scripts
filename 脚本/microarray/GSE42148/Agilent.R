@@ -99,7 +99,7 @@ t[t$logFC < -1 & -log10(t$P.Value) > 2,]$color <- "green"
 plot(t$logFC,-log10(t$P.Value),col=t$color,pch=20)
 abline(h=2) # p<0.01，若p<0.05则h=1.30103
 abline(v=1)
-abline(v=-1)
+abline(v= -1)
 
 # 热图
 library(pheatmap)
