@@ -1,0 +1,54 @@
+---
+title: "try"
+author: "kaji331"
+date: "2017年8月1日"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Trying machine learning by caret, mlr, SuperLearner and H$_2$O
+
+### Now, I will try the caret package for classification of iris dataset by different methods. Because of different parameters and different ideas, I should test different learners respectively.
+
+> Bagging and Boosting are two kind of meta-algorithms for learners
+
+> Bagging: One classifier for different subset of training data by bootstrap, reducing errors from noise, bias and variance (eg. Random forest, Bagged decision trees, CART and so on, not effetive for nearest neighbors)
+
+> Boosting: One training data for different tries of a weak learner, improving some weak learner better than bagging (eg. AdaBoost)
+
+adaboost: AdaBoost Classification Trees, from fastAdaboost
+```{r caret}
+library(caret)
+library(mlbench)
+set.seed(1984)
+train <- iris
+testing <- iris
+for (p in c("pca","center","scale",c("center","scale"),c("pca","scale"))) {
+  for (s in c("boot","optimism_boot","cv","repeatedcv")) {
+    ctrl <- trainControl(method=s,number=100,classProbs=T)
+    fit <- train(Species ~ .,data=train,method=m,preProcess=p,tuneLength=15,trControl=ctrl,
+                 metric="Accuracy")
+    pre <- predict(fit,newdata=testing)
+    print(c(m,p,s))
+    print((temp == iris$Species) %>>% table)
+  }
+}
+```
+
+amdai: Adaptive Mixture Discriminant Analysis, from adaptDA
+AdaBag: Bagged AdaBoost, from adabag, plyr
+treebag: Bagged CART, from ipred, plyr, e1071
+bagFDA: Bagged Flexible Discriminant Analysis, from earth, mda
+bagEarth: Bagged MARS, from earth
+bag: Bagged Model, from caret
+bartMachine: Bayesian Additive Regression Trees, from bartMachine
+glmboost: Boosted Generalized Linear Model, from plyr, mboost
+bstSm: Boosted Smoothing Spline, from bst, plyr
+C5.0: C5.0, from C50, plyr
+chaid: CHi-squared Automated Interaction Detection, from CHAID
+cforest: Conditional Inference Random Forest, from party
+ctree: Conditional Inference Tree, party
+vglmContRatio: Continuation Ratio Model for Ordinal Data, from VGAM
