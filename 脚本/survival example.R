@@ -10,3 +10,12 @@ survdiff(Surv(time[c(1:5,11:15)],status[c(1:5,11:15)])~group[c(1:5,11:15)])
 survdiff(Surv(time[6:15],status[6:15])~group[6:15], rho = 0)
 survdiff(Surv(time[6:15],status[6:15])~group[6:15], rho = 1)
 coxph(Surv(time[6:15],status[6:15])~group[6:15])
+t <- function(x) {
+	x + 1
+}
+print(t(9))
+
+# ======
+print(t(9))
+print(t(9))
+# ======

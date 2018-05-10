@@ -1,6 +1,6 @@
 library(ggplot2)
 ##
-data <- read.csv("/home/kaji331/Projects/R/数据/data.csv")
+data <- read.csv("/home/kaji331/Projects/R/R_scripts/数据/data.csv")
 P <- ggplot(data, aes(x = name, y = value, color = name))
 P + geom_boxplot() + geom_density(stat = "identity")
 ##
@@ -10,7 +10,7 @@ p <- ggplot(d, aes(x = protein, y = concentration, color = protein, fill = prote
 p + geom_bar(alpha = 0.5, color = "black", stat = "identity") + ggtitle("Bradford Assay of E2")
 plot(density(d$concentration))
 ##
-data2 <- read.csv("/home/kaji331/Projects/R/数据/2013-06-03 ELISA.csv")
+data2 <- read.csv("/home/kaji331/Projects/R/R_scripts/数据/2013-06-03 ELISA.csv")
 #
 a <- data.frame(data2$X467[1:8], data2$X.3[1:8])
 names(a) <- c("value", "name")
