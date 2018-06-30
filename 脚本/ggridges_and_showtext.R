@@ -2,6 +2,7 @@ library(cowplot)
 library(ggsci)
 library(ggridges)
 library(showtext)
+library(ggthemes)
 
 dev.new(width=6,height=3)
 font_add("csm",
@@ -10,6 +11,7 @@ font_add("csm",
 showtext_auto()
 ggplot(iris,aes(Sepal.Length,Species,color=Species,fill=Species)) + 
 	geom_density_ridges(alpha=0.75) + scale_color_nejm() + scale_fill_nejm() + 
-	theme_ridges(font_family="csm",line_size=0.1) + 
+	# theme_ridges(font_family="csm",line_size=0.1) + 
+	theme_solarized(base_family="csm",base_size=18) + 
 	theme(plot.background=element_rect(fill="#F4D7B2",color="#F4D7B2"))
 showtext_auto(F)
