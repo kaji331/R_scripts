@@ -27,6 +27,8 @@ set.seed(1984)
 leading_eigen_cl <- cluster_leading_eigen(g)
 set.seed(1984)
 walktrap_cl <- cluster_walktrap(g)
+set.seed(1984)
+pam_cl <- cluster::pam(mtcars[1:7],3)
 
 library(cowplot)
 library(ggsci)
@@ -79,5 +81,12 @@ g7 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>%
 					 clusters=as.factor(walktrap_cl$membership));.} %>>%
 (ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=7,size=3,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="walktrap"))
+set.seed(1984)
+g8 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
+	{. <- data.frame(x=.[,1],
+					 y=.[,2],
+					 clusters=as.factor(pam_cl$cluster));.} %>>%
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=7,size=3,alpha=0.7) +
+ scale_color_lancet() + theme_bw() + labs(title="PAM"))
 
-show(plot_grid(g1,g2,g3,g4,g5,g6,g7))
+show(plot_grid(g1,g2,g3,g4,g5,g6,g7,g8))
