@@ -37,56 +37,56 @@ g1 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>%
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(louvain_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=1,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=15,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="louvain"))
 set.seed(1984)
 g2 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(fast_greedy_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=2,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=18,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="fast_greedy"))
 set.seed(1984)
 g3 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(edge_betweenness_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=3,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=19,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="edge_betweenness"))
 set.seed(1984)
 g4 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(infomap_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=4,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=15,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="infomap"))
 set.seed(1984)
 g5 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(label_prop_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=5,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=18,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="label_prop"))
 set.seed(1984)
 g6 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(leading_eigen_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=6,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=20,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="leading_eigen"))
 set.seed(1984)
 g7 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(walktrap_cl$membership));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=7,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=15,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="walktrap"))
 set.seed(1984)
 g8 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>% 
 	{. <- data.frame(x=.[,1],
 					 y=.[,2],
 					 clusters=as.factor(pam_cl$cluster));.} %>>%
-(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=7,size=3,alpha=0.7) +
+(ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=18,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="PAM"))
 
 show(plot_grid(g1,g2,g3,g4,g5,g6,g7,g8))
