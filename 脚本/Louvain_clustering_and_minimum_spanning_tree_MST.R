@@ -90,6 +90,11 @@ g8 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>%
  scale_color_lancet() + theme_bw() + labs(title="PAM"))
 
 mst <- minimum.spanning.tree(g)
-plot(mst)
+library(ggraph)
+g_mst <- ggraph(mst,'igraph',algorithm='tree',circular=T) + 
+	geom_edge_diagonal(aes(alpha=..index..)) + coord_fixed() + 
+	geom_node_point(aes(size=degree(mst)),color='steelblue') + 
+	geom_node_text(aes(label=name),color='darkmagenta',size=3) + 
+	ggforce::theme_no_axes()
 
-show(plot_grid(g1,g2,g3,g4,g5,g6,g7,g8))
+show(plot_grid(g1,g2,g3,g4,g5,g6,g7,g8,g_mst))
