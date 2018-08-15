@@ -89,4 +89,7 @@ g8 <- (Rtsne::Rtsne(mtcars[1:7],perplexity=10)$Y) %>>%
 (ggplot(.,aes(x,y)) + geom_point(aes(color=clusters),shape=18,size=6,alpha=0.7) +
  scale_color_lancet() + theme_bw() + labs(title="PAM"))
 
+mst <- minimum.spanning.tree(g)
+plot(mst)
+
 show(plot_grid(g1,g2,g3,g4,g5,g6,g7,g8))
