@@ -1,6 +1,6 @@
 library(ggplot2)
 
-data <- read.csv("/home/kaji331/Projects/R/数据/2013-06-10 ELISA His.csv")
+data <- read.csv("/home/kaji331/Projects/R/R_scripts/数据/2013-06-10 ELISA His.csv")
 
 ggplot(data, aes(x=Group, y=OD, color=Group)) + geom_boxplot() + geom_jitter()
 
